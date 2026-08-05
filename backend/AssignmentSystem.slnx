@@ -1,4 +1,5 @@
 <Solution>
+  <Folder Name="/Solution Items/" />
   <Project Path="AssignmentSystem.Api/AssignmentSystem.Api.csproj" />
   <Project Path="AssignmentSystem.Tests/AssignmentSystem.Tests.csproj" />
 </Solution>

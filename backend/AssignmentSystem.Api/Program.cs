@@ -1,7 +1,10 @@
 using AssignmentSystem.Api.Data;
+using DotNetEnv;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 using SharpGrip.FluentValidation.AutoValidation.Mvc.Extensions;
+
+Env.Load();
 
 var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options =>
