@@ -27,7 +27,7 @@ public class AuthController:ControllerBase
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(loginRequest?.Email))
+            if (string.IsNullOrWhiteSpace(loginRequest.Email))
             {
                 return BadRequest(new { Message = "Email is required." });
             }
@@ -38,6 +38,7 @@ public class AuthController:ControllerBase
                 return Unauthorized(new { Message = "Invalid email or password." });
             }
 
+            
             if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
             {
                 return Unauthorized(new { Message = "Invalid email or password." });
@@ -45,16 +46,19 @@ public class AuthController:ControllerBase
 
             var tokenHandler = new JwtSecurityTokenHandler();
 
-            var jwtSecret = Environment.GetEnvironmentVariable("Jwt__Key")
-                ?? _configuration["JwtSetting:SecretKey"];
+            var jwtSecret = Environment.GetEnvironmentVariable("JWT_KEY")
+                ?? _configuration["JWT_KEY"];
 
-            if (string.IsNullOrEmpty(jwtSecret))
+            var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
+                ?? _configuration["JWT_ISSUER"];
+
+            var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
+                ?? _configuration["JWT_AUDIENCE"];
+
+            if (string.IsNullOrEmpty(jwtSecret) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
             {
                 return StatusCode(500, new { Message = "Server configuration error." });
             }
-
-            var issuer = _configuration["JwtSetting:Issuer"] ?? throw new InvalidOperationException("JWT Issuer not configured.");
-            var audience = _configuration["JwtSetting:Audience"] ?? throw new InvalidOperationException("JWT Audience not configured.");
 
             var key = Encoding.ASCII.GetBytes(jwtSecret);
 
@@ -82,11 +86,11 @@ public class AuthController:ControllerBase
                 Role = user.Role.ToString()
             });
         }
-        catch (InvalidOperationException ex)
+        catch (InvalidOperationException)
         {
             return StatusCode(500, new { Message = "Server configuration error." });
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             return StatusCode(500, new { Message = "An error occurred during login." });
         }
