@@ -79,12 +79,14 @@ public class AuthController:ControllerBase
             var token = tokenHandler.CreateToken(tokenDescriptor);
             var tokenString = tokenHandler.WriteToken(token);
 
-            return Ok(new
+            var response = new TokenResponseDto()
             {
                 Token = tokenString,
                 UserId = user.Id,
                 Role = user.Role.ToString()
-            });
+            };
+
+            return Ok(response);
         }
         catch (InvalidOperationException)
         {
