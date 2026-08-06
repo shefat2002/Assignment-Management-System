@@ -1,0 +1,38 @@
+backend/AssignmentSystem.Api/
+├── Controllers/
+│   ├── AuthController.cs          # Handles Login and JWT generation
+│   ├── AdminController.cs         # Handles Users, Classes, Subjects, and App Settings
+│   ├── TeacherController.cs       # Handles creating Assignments and Grading
+│   └── StudentController.cs       # Handles viewing Assignments and submitting answers
+│
+├── DTOs/
+│   ├── Auth/
+│   │   ├── LoginDto.cs
+│   │   ├── TokenResponseDto.cs
+│   │   └── Validators/
+│   │       └── LoginDtoValidator.cs
+│   │
+│   ├── Admin/
+│   │   ├── CreateUserDto.cs
+│   │   ├── CreateClassDto.cs
+│   │   ├── CreateSubjectDto.cs
+│   │   ├── AssignTeacherDto.cs
+│   │   ├── UpdateSettingDto.cs
+│   │   └── Validators/
+│   │       ├── CreateUserDtoValidator.cs
+│   │       ├── CreateClassDtoValidator.cs
+│   │       ├── CreateSubjectDtoValidator.cs
+│   │       ├── AssignTeacherDtoValidator.cs
+│   │       └── UpdateSettingDtoValidator.cs
+│   │
+│   ├── Teacher/
+│   │   ├── CreateAssignmentDto.cs
+│   │   ├── GradeSubmissionDto.cs
+│   │   └── Validators/
+│   │       ├── CreateAssignmentDtoValidator.cs
+│   │       └── GradeSubmissionDtoValidator.cs
+│   │
+│   └── Student/
+│       ├── SubmitAssignmentDto.cs
+│       └── Validators/
+│           └── SubmitAssignmentDtoValidator.cs
