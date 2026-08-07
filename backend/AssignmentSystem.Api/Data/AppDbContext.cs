@@ -17,6 +17,7 @@ public class AppDbContext : DbContext
     public DbSet<TeacherAssignment> TeacherAssignments { get; set; }
     public DbSet<Submission> Submissions { get; set; }
     public DbSet<AppSetting> AppSettings { get; set; }
+    public DbSet<SubmissionAttachment> SubmissionAttachments { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -70,6 +71,16 @@ public class AppDbContext : DbContext
                 .WithMany()
                 .HasForeignKey(s => s.StudentId)
                 .OnDelete(DeleteBehavior.Restrict);
+        });
+        modelBuilder.Entity<SubmissionAttachment>(entity =>
+        {
+            entity.Property(sa => sa.OriginalFileName).IsRequired().HasMaxLength(200);
+            entity.Property(sa => sa.FilePath).IsRequired().HasMaxLength(1000);
+
+            entity.HasOne(sa => sa.Submission)
+                .WithMany(s => s.Attachments)
+                .HasForeignKey(sa => sa.SubmissionId)
+                .OnDelete(DeleteBehavior.Cascade);
         });
 
     }

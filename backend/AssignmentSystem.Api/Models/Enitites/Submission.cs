@@ -1,3 +1,5 @@
+using System.Collections;
+
 namespace AssignmentSystem.Api.Models.Enitites;
 
 public class Submission
@@ -15,4 +17,5 @@ public class Submission
 
     public int StudentId { get; set; }
     public User? Student { get; set; }
+    public ICollection<SubmissionAttachment> Attachments { get; set; } = new List<SubmissionAttachment>();
 }
