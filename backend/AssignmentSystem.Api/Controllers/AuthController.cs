@@ -83,7 +83,8 @@ public class AuthController:ControllerBase
             {
                 Token = tokenString,
                 UserId = user.Id,
-                Role = user.Role.ToString()
+                Role = user.Role.ToString(),
+                Expires = tokenDescriptor.Expires ?? DateTime.UtcNow.AddDays(7)
             };
 
             return Ok(response);

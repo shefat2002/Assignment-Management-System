@@ -3,6 +3,7 @@ using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.DTOs.Teacher;
 using AssignmentSystem.Api.Models.Enitites;
 using AssignmentSystem.Api.Models.Enums;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,6 +11,7 @@ namespace AssignmentSystem.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize(Roles = "Teacher")]
 public class TeacherController: ControllerBase
 {
     private readonly AppDbContext _context;
@@ -21,7 +23,7 @@ public class TeacherController: ControllerBase
     
     // POST: api/teacher/assignments
     [HttpPost("assignments")]
-    public async Task<IActionResult> CreateAssignment([FromBody] CreateAssignmentDto assignment)
+    public async Task<IActionResult> CreateAssignment([FromBody] CreateAssignmentDto? assignment)
     {
         try
         {
