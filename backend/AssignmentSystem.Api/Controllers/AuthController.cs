@@ -3,7 +3,6 @@ using System.Security.Claims;
 using System.Text;
 using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.DTOs.Auth;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -12,7 +11,6 @@ namespace AssignmentSystem.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-[Authorize(Roles = "Admin")]
 public class AuthController:ControllerBase
 {
     private readonly AppDbContext _context;
