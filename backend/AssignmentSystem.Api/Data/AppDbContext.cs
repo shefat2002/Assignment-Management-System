@@ -1,4 +1,3 @@
-using AssignmentSystem.Api.Models.Enitites;
 using AssignmentSystem.Api.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 

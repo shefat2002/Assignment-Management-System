@@ -1,6 +1,5 @@
 using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.DTOs.Admin;
-using AssignmentSystem.Api.Models.Enitites;
 using AssignmentSystem.Api.Models.Entities;
 using AssignmentSystem.Api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;

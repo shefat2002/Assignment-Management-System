@@ -1,5 +1,3 @@
-using AssignmentSystem.Api.Models.Enitites;
-
 namespace AssignmentSystem.Api.Models.Entities;
 
 public class TeacherAssignment
