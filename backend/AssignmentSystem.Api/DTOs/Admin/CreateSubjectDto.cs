@@ -1,8 +1,7 @@
-namespace AssignmentSystem.Api.Models.Entities;
+namespace AssignmentSystem.Api.DTOs.Admin;
 
-public class Class
+public class CreateSubjectDto
 {
-    public int Id { get; set; }
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; } = string.Empty;
 }

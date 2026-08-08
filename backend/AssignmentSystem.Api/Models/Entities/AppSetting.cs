@@ -1,4 +1,4 @@
-namespace AssignmentSystem.Api.Models.Enitites;
+namespace AssignmentSystem.Api.Models.Entities;
 
 public class AppSetting
 {
