@@ -1,4 +1,5 @@
 using System.Collections;
+using AssignmentSystem.Api.Models.Entities;
 
 namespace AssignmentSystem.Api.Models.Enitites;
 

@@ -1,6 +1,7 @@
 using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.DTOs.Admin;
 using AssignmentSystem.Api.Models.Enitites;
+using AssignmentSystem.Api.Models.Entities;
 using AssignmentSystem.Api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -65,7 +66,10 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> AssignTeacher([FromBody] AssignTeacherDto dto)
     {
         var teacher = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.TeacherId && u.Role == UserRole.Teacher);
-        if (teacher == null) return NotFound(new { Message = "Teacher not found." });
+        if (teacher == null)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Teacher not found." });
+        }
 
         var duplicate = await _context.TeacherAssignments
             .AnyAsync(ta => ta.TeacherId == dto.TeacherId && ta.ClassId == dto.ClassId && ta.SubjectId == dto.SubjectId);
@@ -88,7 +92,10 @@ public class AdminController : ControllerBase
     public async Task<IActionResult> EnrollStudent([FromBody] EnrollStudentDto dto)
     {
         var student = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.StudentId && u.Role == UserRole.Student);
-        if (student == null) return NotFound(new { Message = "Student not found." });
+        if (student == null)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Student not found." });
+        }
 
         var duplicate = await _context.StudentEnrollments
             .AnyAsync(se => se.StudentId == dto.StudentId && se.ClassId == dto.ClassId);

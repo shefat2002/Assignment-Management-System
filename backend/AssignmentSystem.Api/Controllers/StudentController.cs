@@ -6,7 +6,7 @@ using AssignmentSystem.Api.Models.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using SubmissionAttachment = AssignmentSystem.Api.Models.Enitites.SubmissionAttachment;
+using SubmissionAttachment = AssignmentSystem.Api.Models.Entities.SubmissionAttachment;
 
 namespace AssignmentSystem.Api.Controllers;
 

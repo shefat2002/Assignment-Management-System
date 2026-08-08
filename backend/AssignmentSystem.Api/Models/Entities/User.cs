@@ -1,6 +1,6 @@
 using AssignmentSystem.Api.Models.Enums;
 
-namespace AssignmentSystem.Api.Models.Enitites;
+namespace AssignmentSystem.Api.Models.Entities;
 
 public class User
 {

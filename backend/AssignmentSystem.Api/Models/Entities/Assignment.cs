@@ -1,6 +1,7 @@
+using AssignmentSystem.Api.Models.Enitites;
 using AssignmentSystem.Api.Models.Enums;
 
-namespace AssignmentSystem.Api.Models.Enitites;
+namespace AssignmentSystem.Api.Models.Entities;
 
 public class Assignment
 {
