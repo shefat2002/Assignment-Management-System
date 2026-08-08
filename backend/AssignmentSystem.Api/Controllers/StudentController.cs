@@ -1,6 +1,5 @@
 using System.Security.Claims;
 using AssignmentSystem.Api.Data;
-using AssignmentSystem.Api.Data.Migrations;
 using AssignmentSystem.Api.DTOs.Student;
 using AssignmentSystem.Api.Models.Enitites;
 using AssignmentSystem.Api.Models.Enums;
