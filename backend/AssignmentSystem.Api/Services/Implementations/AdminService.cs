@@ -12,20 +12,20 @@ public class AdminService : IAdminService
     private readonly IGenericRepository<Class> _classRepository;
     private readonly IGenericRepository<Subject> _subjectRepository;
     private readonly IGenericRepository<TeacherAssignment> _teacherAssignmentRepository;
-    private readonly IGenericRepository<StudentEnrollment> _enrollmentRepository;
+    private readonly IGenericRepository<StudentEnrollment> _studentEnrollmentRepository;
 
     public AdminService(
         IGenericRepository<User> userRepository,
         IGenericRepository<Class> classRepository,
         IGenericRepository<Subject> subjectRepository,
         IGenericRepository<TeacherAssignment> teacherAssignmentRepository,
-        IGenericRepository<StudentEnrollment> enrollmentRepository)
+        IGenericRepository<StudentEnrollment> studentEnrollmentRepository)
     {
         _userRepository = userRepository;
         _classRepository = classRepository;
         _subjectRepository = subjectRepository;
         _teacherAssignmentRepository = teacherAssignmentRepository;
-        _enrollmentRepository = enrollmentRepository;
+        _studentEnrollmentRepository = studentEnrollmentRepository;
     }
     
     // User 
@@ -159,6 +159,32 @@ public class AdminService : IAdminService
         var assignment = await _teacherAssignmentRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Teacher assignment not found.");
         _teacherAssignmentRepository.Delete(assignment);
         await _teacherAssignmentRepository.SaveChangesAsync();
+    }
+    
+    // Student Enrollment
+    public async Task EnrollStudentAsync(EnrollStudentDto dto)
+    {
+        var student = await _userRepository.FirstOrDefaultAsync(u => u.Id == dto.StudentId && u.Role == UserRole.Student) 
+                      ?? throw new KeyNotFoundException("Student not found.");
+
+        if (await _studentEnrollmentRepository.AnyAsync(se => se.StudentId == dto.StudentId && se.ClassId == dto.ClassId))
+            throw new InvalidOperationException("Student is already enrolled in this class.");
+
+        var enrollment = new StudentEnrollment
+        {
+            StudentId = dto.StudentId,
+            ClassId = dto.ClassId
+        };
+
+        await _studentEnrollmentRepository.AddAsync(enrollment);
+        await _studentEnrollmentRepository.SaveChangesAsync();
+    }
+
+    public async Task UnenrollStudentAsync(int id)
+    {
+        var enrollment = await _studentEnrollmentRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Student enrollment not found.");
+        _studentEnrollmentRepository.Delete(enrollment);
+        await _studentEnrollmentRepository.SaveChangesAsync();
     }
     
 }
