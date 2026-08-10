@@ -2,6 +2,7 @@ using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.DTOs.Admin;
 using AssignmentSystem.Api.Models.Entities;
 using AssignmentSystem.Api.Models.Enums;
+using AssignmentSystem.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -13,103 +14,192 @@ namespace AssignmentSystem.Api.Controllers;
 [Authorize(Roles = "Admin")]
 public class AdminController : ControllerBase
 {
-    private readonly AppDbContext _context;
-    public AdminController(AppDbContext context)
+    private readonly IAdminService _adminService;
+
+    public AdminController(IAdminService adminService)
     {
-        _context = context;
+        _adminService = adminService;
     }
     
-    // POST: api/admin/users
+    // User
+    [HttpGet("users")]
+    public async Task<IActionResult> GetUsers()
+    {
+        var users = await _adminService.GetAllUsersAsync();
+        return Ok(users.Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.Role, u.CreatedAt }));
+    }
+
+    [HttpGet("users/{id}")]
+    public async Task<IActionResult> GetUser(int id)
+    {
+        var user = await _adminService.GetUserByIdAsync(id);
+        if (user == null) return NotFound(new { Message = "User not found." });
+        return Ok(new { user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.CreatedAt });
+    }
+
     [HttpPost("users")]
-    public async Task<IActionResult> CreateUser([FromBody] CreateUserDto newUser)
+    public async Task<IActionResult> CreateUser([FromBody] CreateUserDto dto)
     {
-        var existingUser = await _context.Users.AnyAsync(u => u.Email == newUser.Email);
-        if(existingUser)
+        try
         {
-            return BadRequest("User with this email already exists.");
+            var user = await _adminService.CreateUserAsync(dto);
+            return Ok(new { Message = "User created successfully", UserId = user.Id });
         }
-        var user = new User
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
+    }
+
+    [HttpPut("users/{id}")]
+    public async Task<IActionResult> UpdateUser(int id, [FromBody] UpdateUserDto dto)
+    {
+        try
         {
-            FirstName = newUser.FirstName,
-            LastName = newUser.LastName,
-            Email = newUser.Email,
-            Role = newUser.Role,
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword(newUser.Password)
-        };
-        _context.Users.Add(user);
-        await _context.SaveChangesAsync();
-        return Ok(new {Message = "User created successfully", UserId = user.Id} );
+            await _adminService.UpdateUserAsync(id, dto);
+            return Ok(new { Message = "User updated successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("users/{id}")]
+    public async Task<IActionResult> DeleteUser(int id)
+    {
+        try
+        {
+            await _adminService.DeleteUserAsync(id);
+            return Ok(new { Message = "User deleted successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
     }
     
-    // POST: api/admin/classes
+    // Class
+    
+    [HttpGet("classes")]
+    public async Task<IActionResult> GetClasses() => Ok(await _adminService.GetAllClassesAsync());
+
+    [HttpGet("classes/{id}")]
+    public async Task<IActionResult> GetClass(int id)
+    {
+        var classEntity = await _adminService.GetClassByIdAsync(id);
+        if (classEntity == null) return NotFound(new { Message = "Class not found." });
+        return Ok(classEntity);
+    }
+
     [HttpPost("classes")]
     public async Task<IActionResult> CreateClass([FromBody] CreateClassDto dto)
     {
-        var newClass = new Class { Name = dto.Name, Description = dto.Description };
-        _context.Classes.Add(newClass);
-        await _context.SaveChangesAsync();
+        var newClass = await _adminService.CreateClassAsync(dto);
         return Ok(new { Message = "Class created successfully.", ClassId = newClass.Id });
     }
+
+    [HttpPut("classes/{id}")]
+    public async Task<IActionResult> UpdateClass(int id, [FromBody] UpdateClassDto dto)
+    {
+        try
+        {
+            await _adminService.UpdateClassAsync(id, dto);
+            return Ok(new { Message = "Class updated successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("classes/{id}")]
+    public async Task<IActionResult> DeleteClass(int id)
+    {
+        try
+        {
+            await _adminService.DeleteClassAsync(id);
+            return Ok(new { Message = "Class deleted successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
     
-    // POST: api/admin/subjects
+    // Subject
+    [HttpGet("subjects")]
+    public async Task<IActionResult> GetSubjects() => Ok(await _adminService.GetAllSubjectsAsync());
+
+    [HttpGet("subjects/{id}")]
+    public async Task<IActionResult> GetSubject(int id)
+    {
+        var subject = await _adminService.GetSubjectByIdAsync(id);
+        if (subject == null) return NotFound(new { Message = "Subject not found." });
+        return Ok(subject);
+    }
+
     [HttpPost("subjects")]
     public async Task<IActionResult> CreateSubject([FromBody] CreateSubjectDto dto)
     {
-        var subject = new Subject { Name = dto.Name, Description = dto.Description };
-        _context.Subjects.Add(subject);
-        await _context.SaveChangesAsync();
+        var subject = await _adminService.CreateSubjectAsync(dto);
         return Ok(new { Message = "Subject created successfully.", SubjectId = subject.Id });
     }
-    // POST: api/admin/assign-teacher
+
+    [HttpPut("subjects/{id}")]
+    public async Task<IActionResult> UpdateSubject(int id, [FromBody] UpdateSubjectDto dto)
+    {
+        try
+        {
+            await _adminService.UpdateSubjectAsync(id, dto);
+            return Ok(new { Message = "Subject updated successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("subjects/{id}")]
+    public async Task<IActionResult> DeleteSubject(int id)
+    {
+        try
+        {
+            await _adminService.DeleteSubjectAsync(id);
+            return Ok(new { Message = "Subject deleted successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
+    
+    // Assign teacher
     [HttpPost("assign-teacher")]
     public async Task<IActionResult> AssignTeacher([FromBody] AssignTeacherDto dto)
     {
-        var teacher = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.TeacherId && u.Role == UserRole.Teacher);
-        if (teacher == null)
+        try
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Teacher not found." });
+            await _adminService.AssignTeacherAsync(dto);
+            return Ok(new { Message = "Teacher assigned successfully." });
         }
-
-        var duplicate = await _context.TeacherAssignments
-            .AnyAsync(ta => ta.TeacherId == dto.TeacherId && ta.ClassId == dto.ClassId && ta.SubjectId == dto.SubjectId);
-        
-        if (duplicate) return BadRequest(new { Message = "Teacher is already assigned to this class and subject combination." });
-
-        var assignment = new TeacherAssignment
-        {
-            TeacherId = dto.TeacherId,
-            ClassId = dto.ClassId,
-            SubjectId = dto.SubjectId
-        };
-
-        _context.TeacherAssignments.Add(assignment);
-        await _context.SaveChangesAsync();
-        return Ok(new { Message = "Teacher assigned successfully." });
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
     }
-    // POST: api/admin/enroll-student
+
+    [HttpDelete("assign-teacher/{id}")]
+    public async Task<IActionResult> UnassignTeacher(int id)
+    {
+        try
+        {
+            await _adminService.UnassignTeacherAsync(id);
+            return Ok(new { Message = "Teacher unassigned successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
+    
+    // entroll stidetn
+    
     [HttpPost("enroll-student")]
     public async Task<IActionResult> EnrollStudent([FromBody] EnrollStudentDto dto)
     {
-        var student = await _context.Users.FirstOrDefaultAsync(u => u.Id == dto.StudentId && u.Role == UserRole.Student);
-        if (student == null)
+        try
         {
-            return StatusCode(StatusCodes.Status500InternalServerError, new { Message = "Student not found." });
+            await _adminService.EnrollStudentAsync(dto);
+            return Ok(new { Message = "Student enrolled successfully." });
         }
-
-        var duplicate = await _context.StudentEnrollments
-            .AnyAsync(se => se.StudentId == dto.StudentId && se.ClassId == dto.ClassId);
-        
-        if (duplicate) return BadRequest(new { Message = "Student is already enrolled in this class." });
-
-        var enrollment = new StudentEnrollment
-        {
-            StudentId = dto.StudentId,
-            ClassId = dto.ClassId
-        };
-
-        _context.StudentEnrollments.Add(enrollment);
-        await _context.SaveChangesAsync();
-        return Ok(new { Message = "Student enrolled successfully." });
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
     }
-    
+
+    [HttpDelete("enroll-student/{id}")]
+    public async Task<IActionResult> UnenrollStudent(int id)
+    {
+        try
+        {
+            await _adminService.UnenrollStudentAsync(id);
+            return Ok(new { Message = "Student unenrolled successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
 }
