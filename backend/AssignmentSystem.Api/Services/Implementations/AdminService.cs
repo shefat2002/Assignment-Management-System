@@ -31,7 +31,7 @@ public class AdminService : IAdminService
     public async Task<IEnumerable<User>> GetAllUsersAsync() => await _userRepository.GetAllAsync();
     public async Task<User?> GetUserByIdAsync(int id) => await _userRepository.GetByIdAsync(id);
 
-    public async Task<User?> CreateUserAsync(CreateUserDto dto)
+    public async Task<User> CreateUserAsync(CreateUserDto dto)
     {
         if (await _userRepository.AnyAsync(u => u.Email == dto.Email))
             throw new InvalidOperationException("Email is already in use.");
@@ -50,4 +50,25 @@ public class AdminService : IAdminService
         return user;
     }
     
+    public async Task UpdateUserAsync(int id, UpdateUserDto dto)
+    {
+        var user = await _userRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("User not found.");
+
+        if (user.Email != dto.Email && await _userRepository.AnyAsync(u => u.Email == dto.Email))
+            throw new InvalidOperationException("Email is already in use.");
+
+        user.FirstName = dto.FirstName;
+        user.LastName = dto.LastName;
+        user.Email = dto.Email;
+        user.Role = dto.Role;
+
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync();
+    }
+    public async Task DeleteUserAsync(int id)
+    {
+        var user = await _userRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("User not found.");
+        _userRepository.Delete(user);
+        await _userRepository.SaveChangesAsync();
+    }
 }
