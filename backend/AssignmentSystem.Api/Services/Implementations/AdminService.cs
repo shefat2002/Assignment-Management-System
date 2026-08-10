@@ -71,4 +71,34 @@ public class AdminService : IAdminService
         _userRepository.Delete(user);
         await _userRepository.SaveChangesAsync();
     }
+    
+    // Class
+    public async Task<IEnumerable<Class>> GetAllClassesAsync() => await _classRepository.GetAllAsync();
+
+    public async Task<Class?> GetClassByIdAsync(int id) => await _classRepository.GetByIdAsync(id);
+
+    public async Task<Class> CreateClassAsync(CreateClassDto dto)
+    {
+        var newClass = new Class { Name = dto.Name, Description = dto.Description };
+        await _classRepository.AddAsync(newClass);
+        await _classRepository.SaveChangesAsync();
+        return newClass;
+    }
+
+    public async Task UpdateClassAsync(int id, UpdateClassDto dto)
+    {
+        var classEntity = await _classRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Class not found.");
+        classEntity.Name = dto.Name;
+        classEntity.Description = dto.Description;
+
+        _classRepository.Update(classEntity);
+        await _classRepository.SaveChangesAsync();
+    }
+
+    public async Task DeleteClassAsync(int id)
+    {
+        var classEntity = await _classRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Class not found.");
+        _classRepository.Delete(classEntity);
+        await _classRepository.SaveChangesAsync();
+    }
 }
