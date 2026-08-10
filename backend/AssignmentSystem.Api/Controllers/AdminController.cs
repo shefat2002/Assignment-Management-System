@@ -70,4 +70,46 @@ public class AdminController : ControllerBase
         }
         catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
     }
+    
+    // Class
+    
+    [HttpGet("classes")]
+    public async Task<IActionResult> GetClasses() => Ok(await _adminService.GetAllClassesAsync());
+
+    [HttpGet("classes/{id}")]
+    public async Task<IActionResult> GetClass(int id)
+    {
+        var classEntity = await _adminService.GetClassByIdAsync(id);
+        if (classEntity == null) return NotFound(new { Message = "Class not found." });
+        return Ok(classEntity);
+    }
+
+    [HttpPost("classes")]
+    public async Task<IActionResult> CreateClass([FromBody] CreateClassDto dto)
+    {
+        var newClass = await _adminService.CreateClassAsync(dto);
+        return Ok(new { Message = "Class created successfully.", ClassId = newClass.Id });
+    }
+
+    [HttpPut("classes/{id}")]
+    public async Task<IActionResult> UpdateClass(int id, [FromBody] UpdateClassDto dto)
+    {
+        try
+        {
+            await _adminService.UpdateClassAsync(id, dto);
+            return Ok(new { Message = "Class updated successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("classes/{id}")]
+    public async Task<IActionResult> DeleteClass(int id)
+    {
+        try
+        {
+            await _adminService.DeleteClassAsync(id);
+            return Ok(new { Message = "Class deleted successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
 }
