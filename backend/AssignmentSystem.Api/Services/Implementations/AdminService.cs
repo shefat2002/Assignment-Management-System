@@ -101,4 +101,35 @@ public class AdminService : IAdminService
         _classRepository.Delete(classEntity);
         await _classRepository.SaveChangesAsync();
     }
+    
+    // Subject
+    public async Task<IEnumerable<Subject>> GetAllSubjectsAsync() => await _subjectRepository.GetAllAsync();
+
+    public async Task<Subject?> GetSubjectByIdAsync(int id) => await _subjectRepository.GetByIdAsync(id);
+
+    public async Task<Subject> CreateSubjectAsync(CreateSubjectDto dto)
+    {
+        var subject = new Subject { Name = dto.Name, Description = dto.Description };
+        await _subjectRepository.AddAsync(subject);
+        await _subjectRepository.SaveChangesAsync();
+        return subject;
+    }
+
+    public async Task UpdateSubjectAsync(int id, UpdateSubjectDto dto)
+    {
+        var subject = await _subjectRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Subject not found.");
+        subject.Name = dto.Name;
+        subject.Description = dto.Description;
+
+        _subjectRepository.Update(subject);
+        await _subjectRepository.SaveChangesAsync();
+    }
+
+    public async Task DeleteSubjectAsync(int id)
+    {
+        var subject = await _subjectRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Subject not found.");
+        _subjectRepository.Delete(subject);
+        await _subjectRepository.SaveChangesAsync();
+    }
+    
 }
