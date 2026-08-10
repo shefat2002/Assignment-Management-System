@@ -153,4 +153,28 @@ public class AdminController : ControllerBase
         }
         catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
     }
+    
+    // Assign teacher
+    [HttpPost("assign-teacher")]
+    public async Task<IActionResult> AssignTeacher([FromBody] AssignTeacherDto dto)
+    {
+        try
+        {
+            await _adminService.AssignTeacherAsync(dto);
+            return Ok(new { Message = "Teacher assigned successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("assign-teacher/{id}")]
+    public async Task<IActionResult> UnassignTeacher(int id)
+    {
+        try
+        {
+            await _adminService.UnassignTeacherAsync(id);
+            return Ok(new { Message = "Teacher unassigned successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
 }
