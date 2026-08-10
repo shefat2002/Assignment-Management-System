@@ -1,5 +1,6 @@
 using AssignmentSystem.Api.DTOs.Admin;
 using AssignmentSystem.Api.Models.Entities;
+using AssignmentSystem.Api.Models.Enums;
 using AssignmentSystem.Api.Repositories.Interfaces;
 using AssignmentSystem.Api.Services.Interfaces;
 
@@ -10,20 +11,20 @@ public class AdminService : IAdminService
     private readonly IGenericRepository<User> _userRepository;
     private readonly IGenericRepository<Class> _classRepository;
     private readonly IGenericRepository<Subject> _subjectRepository;
-    private readonly IGenericRepository<TeacherAssignment> _assignmentRepository;
+    private readonly IGenericRepository<TeacherAssignment> _teacherAssignmentRepository;
     private readonly IGenericRepository<StudentEnrollment> _enrollmentRepository;
 
     public AdminService(
         IGenericRepository<User> userRepository,
         IGenericRepository<Class> classRepository,
         IGenericRepository<Subject> subjectRepository,
-        IGenericRepository<TeacherAssignment> assignmentRepository,
+        IGenericRepository<TeacherAssignment> teacherAssignmentRepository,
         IGenericRepository<StudentEnrollment> enrollmentRepository)
     {
         _userRepository = userRepository;
         _classRepository = classRepository;
         _subjectRepository = subjectRepository;
-        _assignmentRepository = assignmentRepository;
+        _teacherAssignmentRepository = teacherAssignmentRepository;
         _enrollmentRepository = enrollmentRepository;
     }
     
@@ -130,6 +131,34 @@ public class AdminService : IAdminService
         var subject = await _subjectRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Subject not found.");
         _subjectRepository.Delete(subject);
         await _subjectRepository.SaveChangesAsync();
+    }
+    
+    // Teacher assignment
+    
+    public async Task AssignTeacherAsync(AssignTeacherDto dto)
+    {
+        var teacher = await _userRepository.FirstOrDefaultAsync(u => u.Id == dto.TeacherId && u.Role == UserRole.Teacher) 
+                      ?? throw new KeyNotFoundException("Teacher not found.");
+
+        if (await _teacherAssignmentRepository.AnyAsync(ta => ta.TeacherId == dto.TeacherId && ta.ClassId == dto.ClassId && ta.SubjectId == dto.SubjectId))
+            throw new InvalidOperationException("Teacher is already assigned to this class and subject combination.");
+
+        var assignment = new TeacherAssignment
+        {
+            TeacherId = dto.TeacherId,
+            ClassId = dto.ClassId,
+            SubjectId = dto.SubjectId
+        };
+
+        await _teacherAssignmentRepository.AddAsync(assignment);
+        await _teacherAssignmentRepository.SaveChangesAsync();
+    }
+
+    public async Task UnassignTeacherAsync(int id)
+    {
+        var assignment = await _teacherAssignmentRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Teacher assignment not found.");
+        _teacherAssignmentRepository.Delete(assignment);
+        await _teacherAssignmentRepository.SaveChangesAsync();
     }
     
 }
