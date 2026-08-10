@@ -1,6 +1,8 @@
 using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.Repositories.Implementations;
 using AssignmentSystem.Api.Repositories.Interfaces;
+using AssignmentSystem.Api.Services.Implementations;
+using AssignmentSystem.Api.Services.Interfaces;
 using DotNetEnv;
 using FluentValidation;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -21,7 +23,9 @@ var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__De
 builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(connectionString));
 
+// Repository and Service registrations
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
+builder.Services.AddScoped<IAdminService, AdminService>();
 
 // Load JWT from environment
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY") ?? builder.Configuration["JWT_KEY"];
