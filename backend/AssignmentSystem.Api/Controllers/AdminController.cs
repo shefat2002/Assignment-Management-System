@@ -177,4 +177,29 @@ public class AdminController : ControllerBase
         }
         catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
     }
+    
+    // entroll stidetn
+    
+    [HttpPost("enroll-student")]
+    public async Task<IActionResult> EnrollStudent([FromBody] EnrollStudentDto dto)
+    {
+        try
+        {
+            await _adminService.EnrollStudentAsync(dto);
+            return Ok(new { Message = "Student enrolled successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("enroll-student/{id}")]
+    public async Task<IActionResult> UnenrollStudent(int id)
+    {
+        try
+        {
+            await _adminService.UnenrollStudentAsync(id);
+            return Ok(new { Message = "Student unenrolled successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
 }
