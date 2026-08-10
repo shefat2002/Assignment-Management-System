@@ -3,6 +3,7 @@ using System.Security.Claims;
 using System.Text;
 using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.DTOs.Auth;
+using AssignmentSystem.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,13 +15,11 @@ namespace AssignmentSystem.Api.Controllers;
 [ApiController]
 public class AuthController:ControllerBase
 {
-    private readonly AppDbContext _context;
-    private readonly IConfiguration _configuration;
+    private readonly IAuthService _authService;
 
-    public AuthController(AppDbContext context, IConfiguration configuration)
+    public AuthController(IAuthService authService)
     {
-        _context = context;
-        _configuration = configuration;
+        _authService = authService;
     }
 
     [AllowAnonymous]
@@ -29,76 +28,12 @@ public class AuthController:ControllerBase
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(loginRequest.Email))
-            {
-                return BadRequest(new { Message = "Email is required." });
-            }
-
-            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == loginRequest.Email);
-            if (user == null)
-            {
-                return Unauthorized(new { Message = "Invalid email or password." });
-            }
-
-            
-            if (!BCrypt.Net.BCrypt.Verify(loginRequest.Password, user.PasswordHash))
-            {
-                return Unauthorized(new { Message = "Invalid email or password." });
-            }
-
-            var tokenHandler = new JwtSecurityTokenHandler();
-
-            var jwtSecret = Environment.GetEnvironmentVariable("JWT_KEY")
-                ?? _configuration["JWT_KEY"];
-
-            var issuer = Environment.GetEnvironmentVariable("JWT_ISSUER")
-                ?? _configuration["JWT_ISSUER"];
-
-            var audience = Environment.GetEnvironmentVariable("JWT_AUDIENCE")
-                ?? _configuration["JWT_AUDIENCE"];
-
-            if (string.IsNullOrEmpty(jwtSecret) || string.IsNullOrEmpty(issuer) || string.IsNullOrEmpty(audience))
-            {
-                return StatusCode(500, new { Message = "Server configuration error." });
-            }
-
-            var key = Encoding.ASCII.GetBytes(jwtSecret);
-
-            var tokenDescriptor = new SecurityTokenDescriptor
-            {
-                Subject = new ClaimsIdentity(new[]
-                {
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim(ClaimTypes.Name, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role.ToString())
-                }),
-                Expires = DateTime.UtcNow.AddDays(7),
-                Issuer = issuer,
-                Audience = audience,
-                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
-            };
-
-            var token = tokenHandler.CreateToken(tokenDescriptor);
-            var tokenString = tokenHandler.WriteToken(token);
-
-            var response = new TokenResponseDto()
-            {
-                Token = tokenString,
-                UserId = user.Id,
-                Role = user.Role.ToString(),
-                Expires = tokenDescriptor.Expires ?? DateTime.UtcNow.AddDays(7)
-            };
-
+            var response = await _authService.LoginAsync(loginRequest);
             return Ok(response);
         }
-        catch (InvalidOperationException)
-        {
-            return StatusCode(500, new { Message = "Server configuration error." });
-        }
-        catch (Exception)
-        {
-            return StatusCode(500, new { Message = "An error occurred during login." });
-        }
+        catch (UnauthorizedAccessException ex) { return Unauthorized(new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return StatusCode(500, new { Message = ex.Message }); }
+        catch (Exception) { return StatusCode(500, new { Message = "An error occurred during login." }); }
     }
 
 }
