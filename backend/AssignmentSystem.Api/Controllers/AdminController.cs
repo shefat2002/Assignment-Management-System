@@ -112,4 +112,45 @@ public class AdminController : ControllerBase
         }
         catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
     }
+    
+    // Subject
+    [HttpGet("subjects")]
+    public async Task<IActionResult> GetSubjects() => Ok(await _adminService.GetAllSubjectsAsync());
+
+    [HttpGet("subjects/{id}")]
+    public async Task<IActionResult> GetSubject(int id)
+    {
+        var subject = await _adminService.GetSubjectByIdAsync(id);
+        if (subject == null) return NotFound(new { Message = "Subject not found." });
+        return Ok(subject);
+    }
+
+    [HttpPost("subjects")]
+    public async Task<IActionResult> CreateSubject([FromBody] CreateSubjectDto dto)
+    {
+        var subject = await _adminService.CreateSubjectAsync(dto);
+        return Ok(new { Message = "Subject created successfully.", SubjectId = subject.Id });
+    }
+
+    [HttpPut("subjects/{id}")]
+    public async Task<IActionResult> UpdateSubject(int id, [FromBody] UpdateSubjectDto dto)
+    {
+        try
+        {
+            await _adminService.UpdateSubjectAsync(id, dto);
+            return Ok(new { Message = "Subject updated successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("subjects/{id}")]
+    public async Task<IActionResult> DeleteSubject(int id)
+    {
+        try
+        {
+            await _adminService.DeleteSubjectAsync(id);
+            return Ok(new { Message = "Subject deleted successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+    }
 }
