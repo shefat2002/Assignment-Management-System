@@ -88,4 +88,15 @@ public class TeacherController: ControllerBase
         catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
     }
     
+    // Students & Submissions
+    [HttpGet("students")]
+    public async Task<IActionResult> GetEnrolledStudents()
+    {
+        try
+        {
+            var students = await _teacherService.GetEnrolledStudentsAsync(GetUserId());
+            return Ok(students.Select(s => new { s.Id, s.FirstName, s.LastName, s.Email }));
+        }
+        catch (UnauthorizedAccessException ex) { return Unauthorized(new { Message = ex.Message }); }
+    }
 }
