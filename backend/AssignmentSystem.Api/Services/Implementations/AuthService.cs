@@ -33,7 +33,7 @@ public class AuthService : IAuthService
             throw new InvalidOperationException("Server configuration error.");
         }
         
-        var key = Encoding.ASCII.GetBytes(_jwtSettings.Key);
+        var key = System.Text.Encoding.UTF8.GetBytes(_jwtSettings.Key);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[]

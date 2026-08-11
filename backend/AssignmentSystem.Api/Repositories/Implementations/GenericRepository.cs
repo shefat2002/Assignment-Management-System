@@ -70,4 +70,13 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
         return await query.FirstOrDefaultAsync(predicate);
     }
+    public async Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes)
+    {
+        IQueryable<T> query = _dbSet;
+        foreach (var include in includes)
+        {
+            query = query.Include(include);
+        }
+        return await query.Where(predicate).ToListAsync();
+    }
 }

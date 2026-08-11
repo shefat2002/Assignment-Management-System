@@ -3,6 +3,7 @@ using AssignmentSystem.Api.Data;
 using AssignmentSystem.Api.DTOs.Teacher;
 using AssignmentSystem.Api.Models.Entities;
 using AssignmentSystem.Api.Models.Enums;
+using AssignmentSystem.Api.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -14,86 +15,117 @@ namespace AssignmentSystem.Api.Controllers;
 [Authorize(Roles = "Teacher")]
 public class TeacherController: ControllerBase
 {
-    private readonly AppDbContext _context;
+    private readonly ITeacherService _teacherService;
 
-    public TeacherController(AppDbContext context)
+    public TeacherController(ITeacherService teacherService)
     {
-        _context = context;
+        _teacherService = teacherService;
     }
     
-    // POST: api/teacher/assignments
-    [HttpPost("assignments")]
-    public async Task<IActionResult> CreateAssignment([FromBody] CreateAssignmentDto? assignment)
+    private int GetUserId()
+    {
+        var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+        if (!int.TryParse(userIdClaim, out int userId)) throw new UnauthorizedAccessException("Invalid user ID.");
+        return userId;
+    }
+    
+    // Assignments
+    [HttpGet("assignments")]
+    public async Task<IActionResult> GetMyAssignments()
     {
         try
         {
-            if (assignment == null)
+            var assignments = await _teacherService.GetTeacherAssignmentsAsync(GetUserId());
+            return Ok(assignments.Select(a => new
             {
-                return BadRequest(new { Message = "Assignment data is required." });
-            }
-
-            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
-
-            if (!int.TryParse(userIdClaim, out int userId))
-            {
-                return Unauthorized(new { Message = "Invalid user ID." });
-            }
-
-            var isAuthorized = await _context.TeacherAssignments
-                .AnyAsync(ta => ta.TeacherId == userId
-                                && ta.ClassId == assignment.ClassId
-                                && ta.SubjectId == assignment.SubjectId);
-
-            if (!isAuthorized)
-            {
-                return StatusCode(StatusCodes.Status403Forbidden, new { Message = "You are not authorized to create assignments for this class and subject." });
-            }
-
-            var newAssignment = new Assignment
-            {
-                Title = assignment.Title,
-                Description = assignment.Description,
-                Deadline = assignment.DueDate,
-                MaxMarks = assignment.TotalMarks,
-                AllowResubmission = assignment.AllowResubmission,
-                ClassId = assignment.ClassId,
-                SubjectId = assignment.SubjectId,
-                TeacherId = userId,
-                Status = AssignmentStatus.Draft
-            };
-
-            _context.Assignments.Add(newAssignment);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetAssignment), new { id = newAssignment.Id }, newAssignment);
+                a.Id, a.Title, a.Description, a.Deadline, a.MaxMarks, a.Status, a.AllowResubmission,
+                ClassName = a.Class!.Name, SubjectName = a.Subject!.Name
+            }));
         }
-        catch (Exception)
-        {
-            return StatusCode(500, new { Message = "An error occurred while creating the assignment." });
-        }
+        catch (UnauthorizedAccessException ex) { return Unauthorized(new { Message = ex.Message }); }
     }
-    // GET: api/teacher/assignments/{id}
+
     [HttpGet("assignments/{id}")]
     public async Task<IActionResult> GetAssignment(int id)
     {
+        var assignment = await _teacherService.GetAssignmentByIdAsync(id);
+        if (assignment == null) return NotFound(new { Message = "Assignment not found." });
+        return Ok(assignment);
+    }
+
+    [HttpPost("assignments")]
+    public async Task<IActionResult> CreateAssignment([FromBody] CreateAssignmentDto dto)
+    {
         try
         {
-            var assignment = await _context.Assignments
-                .Include(a => a.Class)
-                .Include(a => a.Subject)
-                .FirstOrDefaultAsync(a => a.Id == id);
-
-            if (assignment == null)
-            {
-                return NotFound(new { Message = "Assignment not found." });
-            }
-
-            return Ok(assignment);
+            var assignment = await _teacherService.CreateAssignmentAsync(GetUserId(), dto);
+            return CreatedAtAction(nameof(GetAssignment), new { id = assignment.Id }, assignment);
         }
-        catch (Exception)
+        catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
+    }
+
+    [HttpPut("assignments/{id}")]
+    public async Task<IActionResult> UpdateAssignment(int id, [FromBody] UpdateAssignmentDto dto)
+    {
+        try
         {
-            return StatusCode(500, new { Message = "An error occurred while retrieving the assignment." });
+            await _teacherService.UpdateAssignmentAsync(GetUserId(), id, dto);
+            return Ok(new { Message = "Assignment updated successfully." });
         }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
+    }
+
+    [HttpDelete("assignments/{id}")]
+    public async Task<IActionResult> DeleteAssignment(int id)
+    {
+        try
+        {
+            await _teacherService.DeleteAssignmentAsync(GetUserId(), id);
+            return Ok(new { Message = "Assignment deleted successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
     }
     
+    // Students & Submissions
+    [HttpGet("students")]
+    public async Task<IActionResult> GetEnrolledStudents()
+    {
+        try
+        {
+            var students = await _teacherService.GetEnrolledStudentsAsync(GetUserId());
+            return Ok(students.Select(s => new { s.Id, s.FirstName, s.LastName, s.Email }));
+        }
+        catch (UnauthorizedAccessException ex) { return Unauthorized(new { Message = ex.Message }); }
+    }
+    [HttpGet("assignments/{assignmentId}/submissions")]
+    public async Task<IActionResult> GetSubmissions(int assignmentId)
+    {
+        try
+        {
+            var submissions = await _teacherService.GetAssignmentSubmissionsAsync(GetUserId(), assignmentId);
+            return Ok(submissions.Select(s => new
+            {
+                s.Id, s.Content, s.SubmittedAt, s.MarksAwarded, s.Feedback, Status = s.Status.ToString(),
+                StudentName = $"{s.Student!.FirstName} {s.Student.LastName}",
+                Attachments = s.Attachments.Select(att => new { att.OriginalFileName, att.FilePath })
+            }));
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
+    }
+
+    [HttpPost("submissions/{submissionId}/grade")]
+    public async Task<IActionResult> GradeSubmission(int submissionId, [FromBody] GradeSubmissionDto dto)
+    {
+        try
+        {
+            await _teacherService.GradeSubmissionAsync(GetUserId(), submissionId, dto);
+            return Ok(new { Message = "Submission graded successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
+    }
 }
