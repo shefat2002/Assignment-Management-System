@@ -10,11 +10,19 @@ public class TeacherService : ITeacherService
 {
     private readonly IGenericRepository<Assignment> _assignmentRepository;
     private readonly IGenericRepository<TeacherAssignment> _teacherAssignmentRepository;
+    private readonly IGenericRepository<Submission> _submissionRepository;
+    private readonly IGenericRepository<StudentEnrollment> _enrollmentRepository;
 
-    public TeacherService(IGenericRepository<Assignment> assignmentRepository, IGenericRepository<TeacherAssignment> teacherAssignmentRepository)
+    public TeacherService(
+        IGenericRepository<Assignment> assignmentRepository, 
+        IGenericRepository<TeacherAssignment> teacherAssignmentRepository,
+        IGenericRepository<Submission> submissionRepository,
+        IGenericRepository<StudentEnrollment> enrollmentRepository)
     {
         _assignmentRepository = assignmentRepository;
         _teacherAssignmentRepository = teacherAssignmentRepository;
+        _submissionRepository = submissionRepository;
+        _enrollmentRepository = enrollmentRepository;
     }
     
     public async Task<Assignment> CreateAssignmentAsync(int teacherId, CreateAssignmentDto dto)
@@ -50,5 +58,42 @@ public class TeacherService : ITeacherService
             a => a.Id == id, 
             a => a.Class!, 
             a => a.Subject!);
+    }
+    public async Task<IEnumerable<Assignment>> GetTeacherAssignmentsAsync(int teacherId)
+    {
+        return await _assignmentRepository.FindWithIncludesAsync(
+            a => a.TeacherId == teacherId, 
+            a => a.Class!, 
+            a => a.Subject!);
+    }
+    public async Task UpdateAssignmentAsync(int teacherId, int assignmentId, UpdateAssignmentDto dto)
+    {
+        var assignment = await _assignmentRepository.GetByIdAsync(assignmentId) 
+                         ?? throw new KeyNotFoundException("Assignment not found.");
+
+        if (assignment.TeacherId != teacherId)
+            throw new UnauthorizedAccessException("You can only update your own assignments.");
+
+        assignment.Title = dto.Title;
+        assignment.Description = dto.Description;
+        assignment.Deadline = dto.DueDate;
+        assignment.MaxMarks = dto.TotalMarks;
+        assignment.AllowResubmission = dto.AllowResubmission;
+        assignment.Status = dto.Status; // Allows publishing
+        assignment.UpdatedAt = DateTime.UtcNow;
+
+        _assignmentRepository.Update(assignment);
+        await _assignmentRepository.SaveChangesAsync();
+    }
+    public async Task DeleteAssignmentAsync(int teacherId, int assignmentId)
+    {
+        var assignment = await _assignmentRepository.GetByIdAsync(assignmentId) 
+                         ?? throw new KeyNotFoundException("Assignment not found.");
+
+        if (assignment.TeacherId != teacherId)
+            throw new UnauthorizedAccessException("You can only delete your own assignments.");
+
+        _assignmentRepository.Delete(assignment);
+        await _assignmentRepository.SaveChangesAsync();
     }
 }
