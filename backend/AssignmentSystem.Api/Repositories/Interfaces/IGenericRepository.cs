@@ -14,4 +14,5 @@ public interface IGenericRepository<T> where T : class
     void Delete(T entity);
     Task SaveChangesAsync();
     Task<T?> FirstOrDefaultWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
+    Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
 }
