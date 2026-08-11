@@ -99,4 +99,33 @@ public class TeacherController: ControllerBase
         }
         catch (UnauthorizedAccessException ex) { return Unauthorized(new { Message = ex.Message }); }
     }
+    [HttpGet("assignments/{assignmentId}/submissions")]
+    public async Task<IActionResult> GetSubmissions(int assignmentId)
+    {
+        try
+        {
+            var submissions = await _teacherService.GetAssignmentSubmissionsAsync(GetUserId(), assignmentId);
+            return Ok(submissions.Select(s => new
+            {
+                s.Id, s.Content, s.SubmittedAt, s.MarksAwarded, s.Feedback, Status = s.Status.ToString(),
+                StudentName = $"{s.Student!.FirstName} {s.Student.LastName}",
+                Attachments = s.Attachments.Select(att => new { att.OriginalFileName, att.FilePath })
+            }));
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
+    }
+
+    [HttpPost("submissions/{submissionId}/grade")]
+    public async Task<IActionResult> GradeSubmission(int submissionId, [FromBody] GradeSubmissionDto dto)
+    {
+        try
+        {
+            await _teacherService.GradeSubmissionAsync(GetUserId(), submissionId, dto);
+            return Ok(new { Message = "Submission graded successfully." });
+        }
+        catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (UnauthorizedAccessException ex) { return StatusCode(StatusCodes.Status403Forbidden, new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
+    }
 }
