@@ -25,6 +25,7 @@ public class TeacherService : ITeacherService
         _enrollmentRepository = enrollmentRepository;
     }
     
+    // Assignments
     public async Task<Assignment> CreateAssignmentAsync(int teacherId, CreateAssignmentDto dto)
     {
         var isAuthorized = await _teacherAssignmentRepository.AnyAsync(ta => 
@@ -53,7 +54,6 @@ public class TeacherService : ITeacherService
 
     public async Task<Assignment?> GetAssignmentByIdAsync(int id)
     {
-        // Using our new Generic Repository feature!
         return await _assignmentRepository.FirstOrDefaultWithIncludesAsync(
             a => a.Id == id, 
             a => a.Class!, 
@@ -95,5 +95,53 @@ public class TeacherService : ITeacherService
 
         _assignmentRepository.Delete(assignment);
         await _assignmentRepository.SaveChangesAsync();
+    }
+    
+    // Students & Submissions
+    
+    public async Task<IEnumerable<User>> GetEnrolledStudentsAsync(int teacherId)
+    {
+        var teacherAssignments = await _teacherAssignmentRepository.FindAsync(ta => ta.TeacherId == teacherId);
+        var classIds = teacherAssignments.Select(ta => ta.ClassId).Distinct().ToList();
+
+        var enrollments = await _enrollmentRepository.FindWithIncludesAsync(
+            se => classIds.Contains(se.ClassId), 
+            se => se.Student!);
+
+        return enrollments.Select(se => se.Student!).DistinctBy(s => s.Id);
+    }
+
+    public async Task<IEnumerable<Submission>> GetAssignmentSubmissionsAsync(int teacherId, int assignmentId)
+    {
+        var assignment = await _assignmentRepository.GetByIdAsync(assignmentId) 
+            ?? throw new KeyNotFoundException("Assignment not found.");
+
+        if (assignment.TeacherId != teacherId)
+            throw new UnauthorizedAccessException("You can only view submissions for your own assignments.");
+
+        return await _submissionRepository.FindWithIncludesAsync(
+            s => s.AssignmentId == assignmentId,
+            s => s.Student!,
+            s => s.Attachments);
+    }
+
+    public async Task GradeSubmissionAsync(int teacherId, int submissionId, GradeSubmissionDto dto)
+    {
+        var submission = await _submissionRepository.FirstOrDefaultWithIncludesAsync(s => s.Id == submissionId, s => s.Assignment!) 
+            ?? throw new KeyNotFoundException("Submission not found.");
+
+        if (submission.Assignment!.TeacherId != teacherId)
+            throw new UnauthorizedAccessException("You can only grade submissions for your own assignments.");
+
+        if (dto.MarksAwarded > submission.Assignment.MaxMarks)
+            throw new InvalidOperationException($"Marks awarded cannot exceed the maximum marks ({submission.Assignment.MaxMarks}).");
+
+        submission.MarksAwarded = dto.MarksAwarded;
+        submission.Feedback = dto.Feedback;
+        submission.Status = dto.Status;
+        submission.UpdatedAt = DateTime.UtcNow;
+
+        _submissionRepository.Update(submission);
+        await _submissionRepository.SaveChangesAsync();
     }
 }
