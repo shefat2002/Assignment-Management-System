@@ -60,6 +60,8 @@ builder.Services.AddSingleton(jwtSettings);
 // Repository and Service registrations
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IAdminService, AdminService>();
+builder.Services.AddScoped<IStudentService, StudentService>();
+builder.Services.AddScoped<ITeacherService, TeacherService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
