@@ -202,4 +202,37 @@ public class AdminController : ControllerBase
         }
         catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
     }
+    
+    [HttpGet("assignments")]
+    public async Task<IActionResult> GetAllAssignments()
+    {
+        var assignments = await _adminService.GetAllAssignmentsAsync();
+        return Ok(assignments.Select(a => new
+        {
+            a.Id, 
+            a.Title, 
+            a.Deadline, 
+            a.MaxMarks, 
+            Status = a.Status.ToString(),
+            TeacherName = $"{a.Teacher!.FirstName} {a.Teacher.LastName}",
+            ClassName = a.Class!.Name,
+            SubjectName = a.Subject!.Name
+        }));
+    }
+
+    [HttpGet("submissions")]
+    public async Task<IActionResult> GetAllSubmissions()
+    {
+        var submissions = await _adminService.GetAllSubmissionsAsync();
+        return Ok(submissions.Select(s => new
+        {
+            s.Id, 
+            s.AssignmentId, 
+            s.SubmittedAt, 
+            Status = s.Status.ToString(), 
+            s.MarksAwarded,
+            StudentName = $"{s.Student!.FirstName} {s.Student.LastName}",
+            AssignmentTitle = s.Assignment!.Title
+        }));
+    }
 }
