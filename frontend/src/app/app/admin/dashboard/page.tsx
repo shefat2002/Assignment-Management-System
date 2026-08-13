@@ -13,7 +13,7 @@ import {
   LogOut,
   Settings,
   UserPlus,
-  ChalkboardTeacher,
+  UserCheck,
   Library
 } from 'lucide-react';
 
@@ -84,7 +84,7 @@ export default function AdminDashboard() {
     {
       title: 'Teachers',
       value: stats.totalTeachers,
-      icon: ChalkboardTeacher,
+      icon: UserCheck,
       color: 'bg-purple-500',
       link: '/admin/users?role=Teacher',
     },
