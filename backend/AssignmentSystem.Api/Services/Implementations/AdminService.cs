@@ -13,19 +13,24 @@ public class AdminService : IAdminService
     private readonly IGenericRepository<Subject> _subjectRepository;
     private readonly IGenericRepository<TeacherAssignment> _teacherAssignmentRepository;
     private readonly IGenericRepository<StudentEnrollment> _studentEnrollmentRepository;
+    private readonly IGenericRepository<Assignment> _assignmentRepository;
+    private readonly IGenericRepository<Submission> _submissionRepository;
 
-    public AdminService(
-        IGenericRepository<User> userRepository,
+    public AdminService(IGenericRepository<User> userRepository,
         IGenericRepository<Class> classRepository,
         IGenericRepository<Subject> subjectRepository,
         IGenericRepository<TeacherAssignment> teacherAssignmentRepository,
-        IGenericRepository<StudentEnrollment> studentEnrollmentRepository)
+        IGenericRepository<StudentEnrollment> studentEnrollmentRepository,
+        IGenericRepository<Assignment> assignmentRepository,
+        IGenericRepository<Submission> submissionRepository)
     {
         _userRepository = userRepository;
         _classRepository = classRepository;
         _subjectRepository = subjectRepository;
         _teacherAssignmentRepository = teacherAssignmentRepository;
         _studentEnrollmentRepository = studentEnrollmentRepository;
+        _assignmentRepository = assignmentRepository;
+        _submissionRepository = submissionRepository;
     }
     
     // User 
@@ -186,5 +191,25 @@ public class AdminService : IAdminService
         _studentEnrollmentRepository.Delete(enrollment);
         await _studentEnrollmentRepository.SaveChangesAsync();
     }
+    
+    public async Task<IEnumerable<Assignment>> GetAllAssignmentsAsync()
+    {
+        return await _assignmentRepository.FindWithIncludesAsync(
+            a => true, 
+            a => a.Teacher!, 
+            a => a.Class!, 
+            a => a.Subject!
+        );
+    }
+
+    public async Task<IEnumerable<Submission>> GetAllSubmissionsAsync()
+    {
+        return await _submissionRepository.FindWithIncludesAsync(
+            s => true,
+            s => s.Student!,
+            s => s.Assignment!
+        );
+    }
+    
     
 }

@@ -31,4 +31,8 @@ public interface IAdminService
     Task UnassignTeacherAsync(int id);
     Task EnrollStudentAsync(EnrollStudentDto dto);
     Task UnenrollStudentAsync(int id);
+    
+    // Get Info
+    Task<IEnumerable<Assignment>> GetAllAssignmentsAsync();
+    Task<IEnumerable<Submission>> GetAllSubmissionsAsync();
 }
