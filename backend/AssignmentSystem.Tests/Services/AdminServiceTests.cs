@@ -17,6 +17,8 @@ public class AdminServiceTests
     private readonly Mock<IGenericRepository<Subject>> _mockSubjectRepo;
     private readonly Mock<IGenericRepository<TeacherAssignment>> _mockTeacherAssignmentRepo;
     private readonly Mock<IGenericRepository<StudentEnrollment>> _mockStudentEnrollmentRepo;
+    private readonly Mock<IGenericRepository<Assignment>> _mockAssignmentRepo;
+    private readonly Mock<IGenericRepository<Submission>> _mockSubmissionRepo;
     private readonly AdminService _adminService;
 
     public AdminServiceTests()
@@ -26,13 +28,17 @@ public class AdminServiceTests
         _mockSubjectRepo = new Mock<IGenericRepository<Subject>>();
         _mockTeacherAssignmentRepo = new Mock<IGenericRepository<TeacherAssignment>>();
         _mockStudentEnrollmentRepo = new Mock<IGenericRepository<StudentEnrollment>>();
+        _mockAssignmentRepo = new Mock<IGenericRepository<Assignment>>();
+        _mockSubmissionRepo = new Mock<IGenericRepository<Submission>>();
 
         _adminService = new AdminService(
             _mockUserRepo.Object,
             _mockClassRepo.Object,
             _mockSubjectRepo.Object,
             _mockTeacherAssignmentRepo.Object,
-            _mockStudentEnrollmentRepo.Object
+            _mockStudentEnrollmentRepo.Object,
+            _mockAssignmentRepo.Object,
+            _mockSubmissionRepo.Object
         );
     }
 
@@ -165,5 +171,54 @@ public class AdminServiceTests
         // Assert
         await act.Should().ThrowAsync<KeyNotFoundException>()
             .WithMessage("Teacher not found.");
+    }
+    // ==========================================
+    // GLOBAL DATA VIEW TESTS
+    // ==========================================
+
+    [Fact]
+    public async Task GetAllAssignmentsAsync_ReturnsAllAssignments()
+    {
+        // Arrange
+        var mockAssignments = MockDataFactory.GetTestAssignments();
+        
+        _mockAssignmentRepo.Setup(repo => repo.FindWithIncludesAsync(
+                It.IsAny<Expression<Func<Assignment, bool>>>(),
+                It.IsAny<Expression<Func<Assignment, object>>[]>()))
+            .ReturnsAsync(mockAssignments);
+
+        // Act
+        var result = await _adminService.GetAllAssignmentsAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(mockAssignments.Count);
+        
+        _mockAssignmentRepo.Verify(repo => repo.FindWithIncludesAsync(
+            It.IsAny<Expression<Func<Assignment, bool>>>(),
+            It.IsAny<Expression<Func<Assignment, object>>[]>()), Times.Once);
+    }
+
+    [Fact]
+    public async Task GetAllSubmissionsAsync_ReturnsAllSubmissions()
+    {
+        // Arrange
+        var mockSubmissions = MockDataFactory.GetTestSubmissions();
+        
+        _mockSubmissionRepo.Setup(repo => repo.FindWithIncludesAsync(
+                It.IsAny<Expression<Func<Submission, bool>>>(),
+                It.IsAny<Expression<Func<Submission, object>>[]>()))
+            .ReturnsAsync(mockSubmissions);
+
+        // Act
+        var result = await _adminService.GetAllSubmissionsAsync();
+
+        // Assert
+        result.Should().NotBeNull();
+        result.Should().HaveCount(mockSubmissions.Count);
+        
+        _mockSubmissionRepo.Verify(repo => repo.FindWithIncludesAsync(
+            It.IsAny<Expression<Func<Submission, bool>>>(),
+            It.IsAny<Expression<Func<Submission, object>>[]>()), Times.Once);
     }
 }
