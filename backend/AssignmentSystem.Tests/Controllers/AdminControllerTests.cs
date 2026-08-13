@@ -68,4 +68,61 @@ public class AdminControllerTests
         var notFound = result.Should().BeOfType<NotFoundObjectResult>().Subject;
         notFound.Value.Should().BeEquivalentTo(new { Message = "Teacher not found." });
     }
+    
+    // ==========================================
+    // GLOBAL DATA VIEW TESTS
+    // ==========================================
+
+    [Fact]
+    public async Task GetAllAssignments_ReturnsOkResult()
+    {
+        // Arrange
+        var mockAssignments = new List<Assignment>
+        {
+            new Assignment 
+            { 
+                Id = 1, 
+                Title = "Test", 
+                Teacher = new User { FirstName = "John", LastName = "Doe" },
+                Class = new Class { Name = "10A" },
+                Subject = new Subject { Name = "Math" }
+            }
+        };
+
+        _mockAdminService.Setup(s => s.GetAllAssignmentsAsync())
+            .ReturnsAsync(mockAssignments);
+
+        // Act
+        var result = await _controller.GetAllAssignments();
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().NotBeNull();
+    }
+
+    [Fact]
+    public async Task GetAllSubmissions_ReturnsOkResult()
+    {
+        // Arrange
+        var mockSubmissions = new List<Submission>
+        {
+            new Submission 
+            { 
+                Id = 1, 
+                AssignmentId = 1, 
+                Student = new User { FirstName = "Jane", LastName = "Doe" },
+                Assignment = new Assignment { Title = "Test Assignment" }
+            }
+        };
+
+        _mockAdminService.Setup(s => s.GetAllSubmissionsAsync())
+            .ReturnsAsync(mockSubmissions);
+
+        // Act
+        var result = await _controller.GetAllSubmissions();
+
+        // Assert
+        var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
+        okResult.Value.Should().NotBeNull();
+    }
 }
