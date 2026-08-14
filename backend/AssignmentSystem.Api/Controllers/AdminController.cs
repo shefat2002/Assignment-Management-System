@@ -23,10 +23,10 @@ public class AdminController : ControllerBase
     
     // User
     [HttpGet("users")]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers([FromQuery] string? role, [FromQuery] string? filterDate, [FromQuery] string? sortField, [FromQuery] string? sortOrder)
     {
-        var users = await _adminService.GetAllUsersAsync();
-        return Ok(users.Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.Role, u.CreatedAt }));
+        var users = await _adminService.GetAllUsersAsync(role, filterDate, sortField, sortOrder);
+        return Ok(users.Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, Role = u.Role.ToString(), u.CreatedAt }));
     }
 
     [HttpGet("users/{id}")]
@@ -34,7 +34,7 @@ public class AdminController : ControllerBase
     {
         var user = await _adminService.GetUserByIdAsync(id);
         if (user == null) return NotFound(new { Message = "User not found." });
-        return Ok(new { user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.CreatedAt });
+        return Ok(new { user.Id, user.FirstName, user.LastName, user.Email, Role = user.Role.ToString(), user.CreatedAt });
     }
 
     [HttpPost("users")]
