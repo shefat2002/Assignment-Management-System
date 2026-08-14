@@ -235,4 +235,25 @@ public class AdminController : ControllerBase
             AssignmentTitle = s.Assignment!.Title
         }));
     }
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetDashboardStats()
+    {
+        var users = await _adminService.GetAllUsersAsync();
+        var classes = await _adminService.GetAllClassesAsync();
+        var subjects = await _adminService.GetAllSubjectsAsync();
+        var assignments = await _adminService.GetAllAssignmentsAsync();
+        var submissions = await _adminService.GetAllSubmissionsAsync();
+
+        return Ok(new
+        {
+            totalUsers = users.Count(),
+            totalTeachers = users.Count(u => u.Role == UserRole.Teacher),
+            totalStudents = users.Count(u => u.Role == UserRole.Student),
+            totalClasses = classes.Count(),
+            totalSubjects = subjects.Count(),
+            totalAssignments = assignments.Count(),
+            totalSubmissions = submissions.Count()
+        });
+    }
 }
