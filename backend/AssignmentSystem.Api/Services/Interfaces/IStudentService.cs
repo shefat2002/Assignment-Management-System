@@ -9,4 +9,5 @@ public interface IStudentService
     Task<Assignment?> GetAssignmentByIdAsync(int studentId, int assignmentId);
     Task<Submission?> GetMySubmissionAsync(int studentId, int assignmentId);
     Task<(bool IsLate, string Message)> SubmitAssignmentAsync(int studentId, int assignmentId, SubmitAssignmentDto dto);
+    Task<IEnumerable<Submission>> GetMySubmissionsAsync(int studentId);
 }

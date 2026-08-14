@@ -10,6 +10,7 @@ import {
   LogOut,
   UploadCloud,
   X,
+  History,
 } from "lucide-react";
 import api from "@/lib/axios";
 
@@ -80,12 +81,20 @@ export default function StudentDashboard() {
         <div className="text-xl font-bold flex items-center gap-2">
           <GraduationCap /> Student Portal
         </div>
-        <button
-          onClick={handleLogout}
-          className="flex items-center gap-2 hover:text-orange-100 transition-colors"
-        >
-          <LogOut size={20} /> Logout
-        </button>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/student/submissions')}
+            className="flex items-center gap-2 hover:text-orange-100 transition-colors px-3 py-1 hover:bg-white/10 rounded-lg"
+          >
+            <History size={20} /> My Submissions
+          </button>
+          <button
+            onClick={handleLogout}
+            className="flex items-center gap-2 hover:text-orange-100 transition-colors"
+          >
+            <LogOut size={20} /> Logout
+          </button>
+        </div>
       </nav>
 
       <main className="max-w-7xl mx-auto p-6 mt-6">

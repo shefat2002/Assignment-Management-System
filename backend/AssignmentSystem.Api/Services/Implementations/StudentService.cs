@@ -141,4 +141,13 @@ public class StudentService : IStudentService
 
         return (isLate, "Assignment submitted successfully.");
     }
+
+    public async Task<IEnumerable<Submission>> GetMySubmissionsAsync(int studentId)
+    {
+        return await _submissionRepository.FindWithIncludesAsync(
+            s => s.StudentId == studentId,
+            s => s.Assignment!,
+            s => s.Assignment!.Subject!,
+            s => s.Attachments);
+    }
 }
