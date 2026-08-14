@@ -64,6 +64,19 @@ builder.Services.AddScoped<IStudentService, StudentService>();
 builder.Services.AddScoped<ITeacherService, TeacherService>();
 
 builder.Services.AddControllers();
+
+// CORS configuration
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy.WithOrigins("http://localhost:3000", "http://localhost:3001")
+              .AllowAnyHeader()
+              .AllowAnyMethod()
+              .AllowCredentials();
+    });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -86,6 +99,7 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "docs";
 });
 
+app.UseCors("AllowFrontend");
 app.UseHttpsRedirection();
 app.UseStaticFiles();
 app.UseAuthentication();
