@@ -94,20 +94,8 @@ export default function AdminSubjects() {
   const viewSubject = (subject: Subject) => setSelectedSubject(subject);
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-      <nav className="bg-slate-800 shadow-md p-4 flex justify-between items-center text-white">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="hover:text-slate-300 transition-colors">
-            <ArrowLeft size={24} />
-          </button>
-          <div className="text-xl font-bold flex items-center gap-2"><BookOpen /> Subjects Management</div>
-        </div>
-        <button onClick={() => { Cookies.remove('token'); Cookies.remove('role'); router.push('/'); }} className="hover:text-slate-300 transition-colors">
-          Logout
-        </button>
-      </nav>
-
-      <main className="max-w-7xl mx-auto p-6 mt-6">
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto text-slate-800 font-sans">
+      <main>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-800">All Subjects</h1>
@@ -285,7 +273,34 @@ export default function AdminSubjects() {
                   </div>
                 )}
               </div>
-              <button onClick={() => { setSelectedSubject(null); openEdit(selectedSubject); }} className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <h3 className="text-md font-bold text-slate-800 mb-3">Assign Teacher to Class</h3>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const target = e.target as any;
+                  const teacherId = target.teacherId.value;
+                  const classId = target.classId.value;
+                  try {
+                    await api.post('/admin/assign-teacher', { 
+                      teacherId: parseInt(teacherId), 
+                      classId: parseInt(classId),
+                      subjectId: selectedSubject.id 
+                    });
+                    target.reset();
+                    alert('Teacher assigned successfully!');
+                  } catch(err: any) { alert(err.response?.data?.message || 'Error assigning teacher'); }
+                }} className="flex flex-col gap-3">
+                  <div className="flex gap-3">
+                    <input type="number" name="teacherId" required placeholder="Teacher ID" className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" />
+                    <input type="number" name="classId" required placeholder="Class ID" className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" />
+                  </div>
+                  <button type="submit" className="bg-indigo-500 hover:bg-indigo-600 text-white font-bold py-2 rounded-xl transition-colors">
+                    Assign Teacher
+                  </button>
+                </form>
+              </div>
+
+              <button onClick={() => { setSelectedSubject(null); openEdit(selectedSubject); }} className="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Edit Subject
               </button>
             </div>

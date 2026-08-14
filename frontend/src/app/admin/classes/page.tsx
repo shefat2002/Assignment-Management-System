@@ -102,20 +102,8 @@ export default function AdminClasses() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-      <nav className="bg-slate-800 shadow-md p-4 flex justify-between items-center text-white">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="hover:text-slate-300 transition-colors">
-            <ArrowLeft size={24} />
-          </button>
-          <div className="text-xl font-bold flex items-center gap-2"><Library /> Classes Management</div>
-        </div>
-        <button onClick={() => { Cookies.remove('token'); Cookies.remove('role'); router.push('/'); }} className="hover:text-slate-300 transition-colors">
-          Logout
-        </button>
-      </nav>
-
-      <main className="max-w-7xl mx-auto p-6 mt-6">
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto text-slate-800 font-sans">
+      <main>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-800">All Classes</h1>
@@ -303,7 +291,13 @@ export default function AdminClasses() {
                           <p className="font-semibold text-slate-800">{student.firstName} {student.lastName}</p>
                           <p className="text-sm text-slate-500">ID: #{student.id}</p>
                         </div>
-                        <button className="p-2 hover:bg-red-100 rounded-lg text-red-600" title="Remove Student">
+                        <button onClick={async () => {
+                          try {
+                             await api.delete(`/admin/enroll-student/${student.id}`);
+                             viewClass(selectedClass);
+                             fetchClasses();
+                          } catch(err: any) { alert(err.response?.data?.message || 'Error unenrolling'); }
+                        }} className="p-2 hover:bg-red-100 rounded-lg text-red-600" title="Remove Student">
                           <UserMinus size={18} />
                         </button>
                       </div>
@@ -316,6 +310,26 @@ export default function AdminClasses() {
                   <p className="text-slate-500">No students enrolled</p>
                 </div>
               )}
+
+              <div className="mt-6 pt-6 border-t border-slate-100">
+                <h3 className="text-md font-bold text-slate-800 mb-3">Enroll New Student</h3>
+                <form onSubmit={async (e) => {
+                  e.preventDefault();
+                  const target = e.target as any;
+                  const studentId = target.studentId.value;
+                  try {
+                    await api.post('/admin/enroll-student', { studentId: parseInt(studentId), classId: selectedClass.id });
+                    target.reset();
+                    viewClass(selectedClass);
+                    fetchClasses();
+                  } catch(err: any) { alert(err.response?.data?.message || 'Error enrolling student'); }
+                }} className="flex gap-3">
+                  <input type="number" name="studentId" required placeholder="Student ID" className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" />
+                  <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl transition-colors">
+                    Enroll
+                  </button>
+                </form>
+              </div>
 
               <button onClick={() => { setSelectedClass(null); openEdit(selectedClass); }} className="w-full mt-6 bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Edit Class

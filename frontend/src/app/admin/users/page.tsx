@@ -114,20 +114,8 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-      <nav className="bg-slate-800 shadow-md p-4 flex justify-between items-center text-white">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="hover:text-slate-300 transition-colors">
-            <ArrowLeft size={24} />
-          </button>
-          <div className="text-xl font-bold flex items-center gap-2"><Users /> Users Management</div>
-        </div>
-        <button onClick={() => { Cookies.remove('token'); Cookies.remove('role'); router.push('/'); }} className="hover:text-slate-300 transition-colors">
-          Logout
-        </button>
-      </nav>
-
-      <main className="max-w-7xl mx-auto p-6 mt-6">
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto text-slate-800 font-sans">
+      <main>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-800">All Users</h1>
