@@ -16,4 +16,5 @@ public interface IGenericRepository<T> where T : class
     Task<T?> FirstOrDefaultWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
     Task<IEnumerable<T>> FindWithIncludesAsync(Expression<Func<T, bool>> predicate, params Expression<Func<T, object>>[] includes);
     Task<IEnumerable<T>> GetFilteredAndSortedAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null);
+    Task<(IEnumerable<T> Items, int TotalCount)> GetPagedFilteredAndSortedAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, int page = 1, int pageSize = 10);
 }
