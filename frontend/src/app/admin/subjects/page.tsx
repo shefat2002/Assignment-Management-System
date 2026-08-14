@@ -11,7 +11,8 @@ interface Subject {
   name: string;
   code: string;
   description?: string;
-  credits: number;
+  classId: number;
+  class?: { name: string; section: string; year: number };
 }
 
 export default function AdminSubjects() {
@@ -22,12 +23,13 @@ export default function AdminSubjects() {
   const [isEditModal, setIsEditModal] = useState(false);
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [classes, setClasses] = useState<any[]>([]);
 
   const [formData, setFormData] = useState({
     name: '',
     code: '',
-    description: '',
-    credits: 3
+    classId: 0,
+    description: ''
   });
 
   const fetchSubjects = async () => {
@@ -41,14 +43,23 @@ export default function AdminSubjects() {
     }
   };
 
-  useEffect(() => { fetchSubjects(); }, []);
+  const fetchClasses = async () => {
+    try {
+      const response = await api.get('/admin/classes');
+      setClasses(response.data);
+    } catch (error) {
+      console.error('Failed to fetch classes', error);
+    }
+  };
+
+  useEffect(() => { fetchSubjects(); fetchClasses(); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await api.post('/admin/subjects', formData);
       setIsCreateModal(false);
-      setFormData({ name: '', code: '', description: '', credits: 3 });
+      setFormData({ name: '', code: '', classId: 0, description: '' });
       fetchSubjects();
     } catch (error: any) {
       alert(error.response?.data?.message || 'Error creating subject');
@@ -82,7 +93,7 @@ export default function AdminSubjects() {
 
   const openEdit = (subject: Subject) => {
     setSelectedSubject(subject);
-    setFormData({ name: subject.name, code: subject.code, description: subject.description || '', credits: subject.credits });
+    setFormData({ name: subject.name, code: subject.code, description: subject.description || '', classId: subject.classId });
     setIsEditModal(true);
   };
 
@@ -120,7 +131,7 @@ export default function AdminSubjects() {
                     <p className="text-sm text-slate-500 font-mono">{subject.code}</p>
                   </div>
                   <span className="bg-pink-100 text-pink-700 px-3 py-1 rounded-full text-xs font-bold">
-                    {subject.credits} Credits
+                    {subject.class ? `${subject.class.name} (${subject.class.year})` : 'No Class'}
                   </span>
                 </div>
                 {subject.description && (
@@ -164,13 +175,18 @@ export default function AdminSubjects() {
                   <input type="text" required value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" placeholder="e.g., MATH101" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={3} placeholder="Brief description of the subject"></textarea>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Credits</label>
-                <input type="number" min="1" max="10" required value={formData.credits} onChange={e => setFormData({...formData, credits: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Class</label>
+                  <select required value={formData.classId} onChange={e => setFormData({...formData, classId: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400">
+                    <option value={0} disabled>Select a class</option>
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section} ({c.year})</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={1} placeholder="Brief description"></textarea>
+                </div>
               </div>
               <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Create Subject
@@ -201,13 +217,18 @@ export default function AdminSubjects() {
                   <input type="text" required value={formData.code} onChange={e => setFormData({...formData, code: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" />
                 </div>
               </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={3}></textarea>
-              </div>
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">Credits</label>
-                <input type="number" min="1" max="10" required value={formData.credits} onChange={e => setFormData({...formData, credits: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Class</label>
+                  <select required value={formData.classId} onChange={e => setFormData({...formData, classId: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400">
+                    <option value={0} disabled>Select a class</option>
+                    {classes.map(c => <option key={c.id} value={c.id}>{c.name} - {c.section} ({c.year})</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                  <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={1}></textarea>
+                </div>
               </div>
               <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Update Subject
@@ -263,8 +284,8 @@ export default function AdminSubjects() {
                   <span className="font-semibold text-slate-800">#{selectedSubject.id}</span>
                 </div>
                 <div className="flex justify-between py-2 border-b border-slate-100">
-                  <span className="text-slate-500">Credits</span>
-                  <span className="font-semibold text-slate-800">{selectedSubject.credits}</span>
+                  <span className="text-slate-500">Class</span>
+                  <span className="font-semibold text-slate-800">{selectedSubject.class ? `${selectedSubject.class.name} (${selectedSubject.class.year})` : 'No Class'}</span>
                 </div>
                 {selectedSubject.description && (
                   <div className="py-2">

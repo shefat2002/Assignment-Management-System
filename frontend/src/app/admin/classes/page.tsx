@@ -9,9 +9,9 @@ import api from '@/lib/axios';
 interface Class {
   id: number;
   name: string;
-  grade: number;
   section: string;
-  academicYear: string;
+  year: number;
+  description?: string;
   students?: Array<{ id: number; firstName: string; lastName: string }>;
 }
 
@@ -26,9 +26,9 @@ export default function AdminClasses() {
 
   const [formData, setFormData] = useState({
     name: '',
-    grade: 1,
     section: 'A',
-    academicYear: new Date().getFullYear().toString()
+    year: new Date().getFullYear(),
+    description: ''
   });
 
   const fetchClasses = async () => {
@@ -49,7 +49,7 @@ export default function AdminClasses() {
     try {
       await api.post('/admin/classes', formData);
       setIsCreateModal(false);
-      setFormData({ name: '', grade: 1, section: 'A', academicYear: new Date().getFullYear().toString() });
+      setFormData({ name: '', section: 'A', year: new Date().getFullYear(), description: '' });
       fetchClasses();
     } catch (error: any) {
       alert(error.response?.data?.message || 'Error creating class');
@@ -83,7 +83,7 @@ export default function AdminClasses() {
 
   const openEdit = (cls: Class) => {
     setSelectedClass(cls);
-    setFormData({ name: cls.name, grade: cls.grade, section: cls.section, academicYear: cls.academicYear });
+    setFormData({ name: cls.name, section: cls.section, year: cls.year, description: cls.description || '' });
     setIsEditModal(true);
   };
 
@@ -125,10 +125,10 @@ export default function AdminClasses() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">{cls.name}</h3>
-                    <p className="text-sm text-slate-500">Grade {cls.grade} - {cls.section}</p>
+                    <p className="text-sm text-slate-500">Section {cls.section}</p>
                   </div>
                   <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">
-                    {cls.academicYear}
+                    {cls.year}
                   </span>
                 </div>
                 <div className="flex justify-end gap-2 pt-4 border-t border-slate-100">
@@ -165,10 +165,6 @@ export default function AdminClasses() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Grade</label>
-                  <input type="number" min="1" max="12" required value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
-                </div>
-                <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Section</label>
                   <select value={formData.section} onChange={e => setFormData({...formData, section: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none">
                     {['A','B','C','D','E','F'].map(s => <option key={s} value={s}>{s}</option>)}
@@ -176,8 +172,12 @@ export default function AdminClasses() {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Year</label>
-                  <input type="text" required value={formData.academicYear} onChange={e => setFormData({...formData, academicYear: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" placeholder="2024" />
+                  <input type="number" required value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={2}></textarea>
               </div>
               <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Create Class
@@ -204,10 +204,6 @@ export default function AdminClasses() {
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Grade</label>
-                  <input type="number" min="1" max="12" required value={formData.grade} onChange={e => setFormData({...formData, grade: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
-                </div>
-                <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Section</label>
                   <select value={formData.section} onChange={e => setFormData({...formData, section: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none">
                     {['A','B','C','D','E','F'].map(s => <option key={s} value={s}>{s}</option>)}
@@ -215,8 +211,12 @@ export default function AdminClasses() {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Year</label>
-                  <input type="text" required value={formData.academicYear} onChange={e => setFormData({...formData, academicYear: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                  <input type="number" required value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
                 </div>
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={2}></textarea>
               </div>
               <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Update Class
@@ -262,8 +262,8 @@ export default function AdminClasses() {
             <div className="p-6">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-slate-50 p-4 rounded-xl">
-                  <p className="text-sm text-slate-500">Grade</p>
-                  <p className="text-xl font-bold text-slate-800">{selectedClass.grade}</p>
+                  <p className="text-sm text-slate-500">Name</p>
+                  <p className="text-xl font-bold text-slate-800">{selectedClass.name}</p>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl">
                   <p className="text-sm text-slate-500">Section</p>
@@ -271,7 +271,7 @@ export default function AdminClasses() {
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl">
                   <p className="text-sm text-slate-500">Year</p>
-                  <p className="text-xl font-bold text-slate-800">{selectedClass.academicYear}</p>
+                  <p className="text-xl font-bold text-slate-800">{selectedClass.year}</p>
                 </div>
                 <div className="bg-orange-50 p-4 rounded-xl">
                   <p className="text-sm text-orange-600">Students</p>
