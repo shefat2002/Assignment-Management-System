@@ -34,7 +34,15 @@ public class AppDbContext : DbContext
         });
         
         modelBuilder.Entity<Class>().Property(c => c.Name).IsRequired().HasMaxLength(100);
+        modelBuilder.Entity<Class>().Property(c => c.Section).HasMaxLength(50);
+        
         modelBuilder.Entity<Subject>().Property(s => s.Name).IsRequired().HasMaxLength(100);
+        modelBuilder.Entity<Subject>().Property(s => s.Code).IsRequired().HasMaxLength(50);
+        modelBuilder.Entity<Subject>()
+            .HasOne(s => s.Class)
+            .WithMany()
+            .HasForeignKey(s => s.ClassId)
+            .OnDelete(DeleteBehavior.Restrict);
         
         modelBuilder.Entity<StudentEnrollment>()
             .HasOne(se => se.Student)
