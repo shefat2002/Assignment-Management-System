@@ -28,6 +28,12 @@ export default function AdminUsers() {
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Sorting & Filtering State
+  const [sortField, setSortField] = useState<'name' | 'email' | 'role' | 'createdAt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filterRole, setFilterRole] = useState<string>(roleFilter || 'All');
+  const [filterDate, setFilterDate] = useState<string>('All');
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -38,13 +44,15 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('/admin/users');
+      const params = new URLSearchParams();
+      if (filterRole !== 'All') params.append('role', filterRole);
+      if (filterDate !== 'All') params.append('filterDate', filterDate);
+      params.append('sortField', sortField);
+      params.append('sortOrder', sortOrder);
+
+      const response = await api.get(`/admin/users?${params.toString()}`);
       setUsers(response.data);
-      if (roleFilter) {
-        setFiltered(response.data.filter((u: User) => u.role === roleFilter));
-      } else {
-        setFiltered(response.data);
-      }
+      setFiltered(response.data);
     } catch (error) {
       console.error('Failed to fetch users', error);
     } finally {
@@ -52,7 +60,9 @@ export default function AdminUsers() {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, [roleFilter]);
+  useEffect(() => {
+    fetchUsers();
+  }, [sortField, sortOrder, filterRole, filterDate]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -126,15 +136,43 @@ export default function AdminUsers() {
           </button>
         </div>
 
-        {roleFilter && (
-          <div className="mb-4 flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-lg">
-            <Filter size={16} className="text-slate-600" />
-            <span className="text-slate-600">Filtered by role: <strong>{roleFilter}</strong></span>
-            <button onClick={() => router.push('/admin/users')} className="ml-auto text-slate-500 hover:text-slate-700">
-              <X size={18} />
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter size={18} className="text-slate-400" />
+              <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-slate-400">
+                <option value="All">All Roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Teacher">Teacher</option>
+                <option value="Student">Student</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <select value={filterDate} onChange={e => setFilterDate(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-slate-400">
+                <option value="All">All Time</option>
+                <option value="Today">Today</option>
+                <option value="This Week">This Week</option>
+                <option value="This Month">This Month</option>
+                <option value="This Year">This Year</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-500 font-medium">Sort by:</span>
+              <select value={sortField} onChange={e => setSortField(e.target.value as any)} className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-slate-400">
+                <option value="name">Name</option>
+                <option value="email">Email</option>
+                <option value="role">Role</option>
+                <option value="createdAt">Created Date</option>
+              </select>
+            </div>
+            <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+              {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
             </button>
           </div>
-        )}
+        </div>
 
         {loading ? (
           <div className="text-center py-12">
