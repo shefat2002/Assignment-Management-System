@@ -23,10 +23,16 @@ public class AdminController : ControllerBase
     
     // User
     [HttpGet("users")]
-    public async Task<IActionResult> GetUsers([FromQuery] string? role, [FromQuery] string? filterDate, [FromQuery] string? sortField, [FromQuery] string? sortOrder)
+    public async Task<IActionResult> GetUsers([FromQuery] string? role, [FromQuery] string? filterDate, [FromQuery] string? sortField, [FromQuery] string? sortOrder, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var users = await _adminService.GetAllUsersAsync(role, filterDate, sortField, sortOrder);
-        return Ok(users.Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, Role = u.Role.ToString(), u.CreatedAt }));
+        var result = await _adminService.GetPagedUsersAsync(role, filterDate, sortField, sortOrder, page, pageSize);
+        return Ok(new 
+        {
+            TotalCount = result.TotalCount,
+            Page = page,
+            PageSize = pageSize,
+            Users = result.Users.Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, Role = u.Role.ToString(), u.CreatedAt })
+        });
     }
 
     [HttpGet("users/{id}")]

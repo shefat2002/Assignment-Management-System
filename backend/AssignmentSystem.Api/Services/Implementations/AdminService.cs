@@ -34,7 +34,9 @@ public class AdminService : IAdminService
     }
     
     // User 
-    public async Task<IEnumerable<User>> GetAllUsersAsync(string role = null, string filterDate = null, string sortField = null, string sortOrder = null)
+    public async Task<IEnumerable<User>> GetAllUsersAsync() => await _userRepository.GetAllAsync();
+    
+    public async Task<(IEnumerable<User> Users, int TotalCount)> GetPagedUsersAsync(string role = null, string filterDate = null, string sortField = null, string sortOrder = null, int page = 1, int pageSize = 10)
     {
         var now = DateTime.UtcNow;
         UserRole? parsedRole = null;
@@ -44,7 +46,7 @@ public class AdminService : IAdminService
                 parsedRole = r;
         }
 
-        return await _userRepository.GetFilteredAndSortedAsync(
+        return await _userRepository.GetPagedFilteredAndSortedAsync(
             filter: u => 
                 (!parsedRole.HasValue || u.Role == parsedRole.Value) &&
                 (string.IsNullOrEmpty(filterDate) || filterDate == "All" || 
@@ -63,7 +65,9 @@ public class AdminService : IAdminService
                     "createdat" => isDesc ? q.OrderByDescending(x => x.CreatedAt) : q.OrderBy(x => x.CreatedAt),
                     _ => isDesc ? q.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName) : q.OrderBy(x => x.FirstName).ThenBy(x => x.LastName)
                 };
-            }
+            },
+            page: page,
+            pageSize: pageSize
         );
     }
     public async Task<User?> GetUserByIdAsync(int id) => await _userRepository.GetByIdAsync(id);

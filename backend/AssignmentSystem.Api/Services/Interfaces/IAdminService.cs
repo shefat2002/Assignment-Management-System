@@ -6,7 +6,8 @@ namespace AssignmentSystem.Api.Services.Interfaces;
 public interface IAdminService
 {
     // Users
-    Task<IEnumerable<User>> GetAllUsersAsync(string role = null, string filterDate = null, string sortField = null, string sortOrder = null);
+    Task<IEnumerable<User>> GetAllUsersAsync();
+    Task<(IEnumerable<User> Users, int TotalCount)> GetPagedUsersAsync(string role = null, string filterDate = null, string sortField = null, string sortOrder = null, int page = 1, int pageSize = 10);
     Task<User?> GetUserByIdAsync(int id);
     Task<User> CreateUserAsync(CreateUserDto dto);
     Task UpdateUserAsync(int id, UpdateUserDto dto);
