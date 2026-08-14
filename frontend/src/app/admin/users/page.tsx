@@ -28,11 +28,14 @@ export default function AdminUsers() {
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Sorting & Filtering State
+  // Sorting, Filtering & Pagination State
   const [sortField, setSortField] = useState<'name' | 'email' | 'role' | 'createdAt'>('name');
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
   const [filterRole, setFilterRole] = useState<string>(roleFilter || 'All');
   const [filterDate, setFilterDate] = useState<string>('All');
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalCount, setTotalCount] = useState<number>(0);
 
   const [formData, setFormData] = useState({
     firstName: '',
@@ -49,10 +52,30 @@ export default function AdminUsers() {
       if (filterDate !== 'All') params.append('filterDate', filterDate);
       params.append('sortField', sortField);
       params.append('sortOrder', sortOrder);
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
 
       const response = await api.get(`/admin/users?${params.toString()}`);
-      setUsers(response.data);
-      setFiltered(response.data);
+      
+      let items = [];
+      let count = 0;
+      
+      if (Array.isArray(response.data)) {
+        items = response.data;
+        count = items.length;
+      } else if (response.data && Array.isArray(response.data.users)) {
+        items = response.data.users;
+        count = response.data.totalCount || items.length;
+      } else if (response.data && Array.isArray(response.data.Users)) {
+        items = response.data.Users;
+        count = response.data.TotalCount || items.length;
+      } else {
+        console.error("Unknown API response format:", response.data);
+      }
+
+      setUsers(items);
+      setFiltered(items);
+      setTotalCount(count);
     } catch (error) {
       console.error('Failed to fetch users', error);
     } finally {
@@ -62,7 +85,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     fetchUsers();
-  }, [sortField, sortOrder, filterRole, filterDate]);
+  }, [sortField, sortOrder, filterRole, filterDate, page, pageSize]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -220,6 +243,40 @@ export default function AdminUsers() {
                 ))}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            <div className="bg-slate-50 border-t border-slate-100 p-4 flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                Showing <span className="font-semibold">{(page - 1) * pageSize + 1}</span> to <span className="font-semibold">{Math.min(page * pageSize, totalCount)}</span> of <span className="font-semibold">{totalCount}</span> results
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))} 
+                  disabled={page === 1}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 font-medium text-sm transition-colors"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => i + 1).map(pageNum => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === pageNum ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setPage(p => Math.min(Math.ceil(totalCount / pageSize), p + 1))} 
+                  disabled={page === Math.ceil(totalCount / pageSize) || totalCount === 0}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 font-medium text-sm transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>
