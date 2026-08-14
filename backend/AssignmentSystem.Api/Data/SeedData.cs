@@ -82,18 +82,18 @@ public static class SeedData
         await context.SaveChangesAsync();
 
         // === CLASSES ===
-        var class10 = new Class { Name = "Class 10", Description = "Secondary Education - Year 10" };
-        var class12 = new Class { Name = "Class 12", Description = "Higher Secondary - Year 12" };
+        var class10 = new Class { Name = "Class 10", Section = "A", Year = DateTime.UtcNow.Year, Description = "Secondary Education - Year 10" };
+        var class12 = new Class { Name = "Class 12", Section = "A", Year = DateTime.UtcNow.Year, Description = "Higher Secondary - Year 12" };
 
         await context.Classes.AddRangeAsync(class10, class12);
         await context.SaveChangesAsync();
 
         // === SUBJECTS ===
-        var math = new Subject { Name = "Mathematics", Description = "Advanced Mathematics" };
-        var physics = new Subject { Name = "Physics", Description = "Classical and Modern Physics" };
-        var chemistry = new Subject { Name = "Chemistry", Description = "Organic and Inorganic Chemistry" };
-        var english = new Subject { Name = "English", Description = "English Literature and Language" };
-        var cs = new Subject { Name = "Computer Science", Description = "Programming and Algorithms" };
+        var math = new Subject { Name = "Mathematics", Code = "MATH101", ClassId = class10.Id, Description = "Advanced Mathematics" };
+        var physics = new Subject { Name = "Physics", Code = "PHYS101", ClassId = class12.Id, Description = "Classical and Modern Physics" };
+        var chemistry = new Subject { Name = "Chemistry", Code = "CHEM101", ClassId = class10.Id, Description = "Organic and Inorganic Chemistry" };
+        var english = new Subject { Name = "English", Code = "ENG101", ClassId = class12.Id, Description = "English Literature and Language" };
+        var cs = new Subject { Name = "Computer Science", Code = "CS101", ClassId = class10.Id, Description = "Programming and Algorithms" };
 
         await context.Subjects.AddRangeAsync(math, physics, chemistry, english, cs);
         await context.SaveChangesAsync();
