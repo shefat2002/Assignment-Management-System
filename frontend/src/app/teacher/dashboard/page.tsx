@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Cookies from 'js-cookie';
-import { Users, CheckCircle, LogOut, X, Edit2, Trash2 } from 'lucide-react';
+import { Users, CheckCircle, LogOut, X, Edit2, Trash2, Eye } from 'lucide-react';
 import api from '@/lib/axios';
 
 export default function TeacherDashboard() {
@@ -122,6 +122,9 @@ export default function TeacherDashboard() {
               <div className="flex justify-between items-center pt-4 border-t border-slate-100">
                 <span className="text-sm font-semibold text-slate-500 flex items-center gap-1"><CheckCircle size={16} className="text-purple-500" /> {assignment.maxMarks} Marks</span>
                 <div className="flex gap-2">
+                  <button onClick={() => router.push(`/teacher/submissions/${assignment.id}`)} className="p-2 hover:bg-blue-50 rounded-lg transition-colors text-blue-600" title="View Submissions">
+                    <Eye size={18} />
+                  </button>
                   <button onClick={() => handleEditAssignment(assignment)} className="p-2 hover:bg-purple-50 rounded-lg transition-colors text-purple-600" title="Edit">
                     <Edit2 size={18} />
                   </button>
