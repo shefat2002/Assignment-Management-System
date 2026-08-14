@@ -99,32 +99,11 @@ builder.Services.AddValidatorsFromAssemblyContaining<Program>();
 
 var app = builder.Build();
 
-//Seed initial Admin user if not exists
+// Seed database with demo data
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    
-    // Check if an Admin already exists
-    var adminExists = context.Users.Any(u => u.Role == AssignmentSystem.Api.Models.Enums.UserRole.Admin);
-    
-    if (!adminExists)
-    {
-        var initialAdmin = new AssignmentSystem.Api.Models.Entities.User
-        {
-            FirstName = "System",
-            LastName = "Admin",
-            Email = "admin@assignmentsystem.com",
-            // Hash the default password "Admin@123"
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin@123"), 
-            Role = AssignmentSystem.Api.Models.Enums.UserRole.Admin,
-            CreatedAt = DateTime.UtcNow
-        };
-
-        context.Users.Add(initialAdmin);
-        context.SaveChanges();
-        
-        Console.WriteLine("Initial Admin account seeded successfully.");
-    }
+    await SeedData.SeedAsync(context);
 }
 
 app.UseSwagger();
