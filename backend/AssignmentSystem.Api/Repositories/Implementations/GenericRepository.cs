@@ -79,4 +79,37 @@ public class GenericRepository<T> : IGenericRepository<T> where T : class
         }
         return await query.Where(predicate).ToListAsync();
     }
+    
+    public async Task<IEnumerable<T>> GetFilteredAndSortedAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null)
+    {
+        IQueryable<T> query = _dbSet;
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+        if (orderBy != null)
+        {
+            return await orderBy(query).ToListAsync();
+        }
+        return await query.ToListAsync();
+    }
+
+    public async Task<(IEnumerable<T> Items, int TotalCount)> GetPagedFilteredAndSortedAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IOrderedQueryable<T>> orderBy = null, int page = 1, int pageSize = 10)
+    {
+        IQueryable<T> query = _dbSet;
+        if (filter != null)
+        {
+            query = query.Where(filter);
+        }
+        
+        int totalCount = await query.CountAsync();
+        
+        if (orderBy != null)
+        {
+            query = orderBy(query);
+        }
+        
+        var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+        return (items, totalCount);
+    }
 }

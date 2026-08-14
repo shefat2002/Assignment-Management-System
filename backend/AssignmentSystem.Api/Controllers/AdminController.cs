@@ -23,10 +23,16 @@ public class AdminController : ControllerBase
     
     // User
     [HttpGet("users")]
-    public async Task<IActionResult> GetUsers()
+    public async Task<IActionResult> GetUsers([FromQuery] string? role, [FromQuery] string? filterDate, [FromQuery] string? sortField, [FromQuery] string? sortOrder, [FromQuery] int page = 1, [FromQuery] int pageSize = 10)
     {
-        var users = await _adminService.GetAllUsersAsync();
-        return Ok(users.Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, u.Role, u.CreatedAt }));
+        var result = await _adminService.GetPagedUsersAsync(role, filterDate, sortField, sortOrder, page, pageSize);
+        return Ok(new 
+        {
+            TotalCount = result.TotalCount,
+            Page = page,
+            PageSize = pageSize,
+            Users = result.Users.Select(u => new { u.Id, u.FirstName, u.LastName, u.Email, Role = u.Role.ToString(), u.CreatedAt })
+        });
     }
 
     [HttpGet("users/{id}")]
@@ -34,7 +40,7 @@ public class AdminController : ControllerBase
     {
         var user = await _adminService.GetUserByIdAsync(id);
         if (user == null) return NotFound(new { Message = "User not found." });
-        return Ok(new { user.Id, user.FirstName, user.LastName, user.Email, user.Role, user.CreatedAt });
+        return Ok(new { user.Id, user.FirstName, user.LastName, user.Email, Role = user.Role.ToString(), user.CreatedAt });
     }
 
     [HttpPost("users")]
@@ -234,5 +240,26 @@ public class AdminController : ControllerBase
             StudentName = $"{s.Student!.FirstName} {s.Student.LastName}",
             AssignmentTitle = s.Assignment!.Title
         }));
+    }
+
+    [HttpGet("stats")]
+    public async Task<IActionResult> GetDashboardStats()
+    {
+        var users = await _adminService.GetAllUsersAsync();
+        var classes = await _adminService.GetAllClassesAsync();
+        var subjects = await _adminService.GetAllSubjectsAsync();
+        var assignments = await _adminService.GetAllAssignmentsAsync();
+        var submissions = await _adminService.GetAllSubmissionsAsync();
+
+        return Ok(new
+        {
+            totalUsers = users.Count(),
+            totalTeachers = users.Count(u => u.Role == UserRole.Teacher),
+            totalStudents = users.Count(u => u.Role == UserRole.Student),
+            totalClasses = classes.Count(),
+            totalSubjects = subjects.Count(),
+            totalAssignments = assignments.Count(),
+            totalSubmissions = submissions.Count()
+        });
     }
 }

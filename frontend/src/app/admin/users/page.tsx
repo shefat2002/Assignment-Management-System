@@ -28,6 +28,15 @@ export default function AdminUsers() {
   const [isDeleteConfirm, setIsDeleteConfirm] = useState(false);
   const [loading, setLoading] = useState(true);
 
+  // Sorting, Filtering & Pagination State
+  const [sortField, setSortField] = useState<'name' | 'email' | 'role' | 'createdAt'>('name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [filterRole, setFilterRole] = useState<string>(roleFilter || 'All');
+  const [filterDate, setFilterDate] = useState<string>('All');
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+  const [totalCount, setTotalCount] = useState<number>(0);
+
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
@@ -38,13 +47,35 @@ export default function AdminUsers() {
 
   const fetchUsers = async () => {
     try {
-      const response = await api.get('/admin/users');
-      setUsers(response.data);
-      if (roleFilter) {
-        setFiltered(response.data.filter((u: User) => u.role === roleFilter));
+      const params = new URLSearchParams();
+      if (filterRole !== 'All') params.append('role', filterRole);
+      if (filterDate !== 'All') params.append('filterDate', filterDate);
+      params.append('sortField', sortField);
+      params.append('sortOrder', sortOrder);
+      params.append('page', page.toString());
+      params.append('pageSize', pageSize.toString());
+
+      const response = await api.get(`/admin/users?${params.toString()}`);
+      
+      let items = [];
+      let count = 0;
+      
+      if (Array.isArray(response.data)) {
+        items = response.data;
+        count = items.length;
+      } else if (response.data && Array.isArray(response.data.users)) {
+        items = response.data.users;
+        count = response.data.totalCount || items.length;
+      } else if (response.data && Array.isArray(response.data.Users)) {
+        items = response.data.Users;
+        count = response.data.TotalCount || items.length;
       } else {
-        setFiltered(response.data);
+        console.error("Unknown API response format:", response.data);
       }
+
+      setUsers(items);
+      setFiltered(items);
+      setTotalCount(count);
     } catch (error) {
       console.error('Failed to fetch users', error);
     } finally {
@@ -52,7 +83,9 @@ export default function AdminUsers() {
     }
   };
 
-  useEffect(() => { fetchUsers(); }, [roleFilter]);
+  useEffect(() => {
+    fetchUsers();
+  }, [sortField, sortOrder, filterRole, filterDate, page, pageSize]);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -114,20 +147,8 @@ export default function AdminUsers() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-      <nav className="bg-slate-800 shadow-md p-4 flex justify-between items-center text-white">
-        <div className="flex items-center gap-4">
-          <button onClick={() => router.back()} className="hover:text-slate-300 transition-colors">
-            <ArrowLeft size={24} />
-          </button>
-          <div className="text-xl font-bold flex items-center gap-2"><Users /> Users Management</div>
-        </div>
-        <button onClick={() => { Cookies.remove('token'); Cookies.remove('role'); router.push('/'); }} className="hover:text-slate-300 transition-colors">
-          Logout
-        </button>
-      </nav>
-
-      <main className="max-w-7xl mx-auto p-6 mt-6">
+    <div className="p-6 sm:p-8 max-w-7xl mx-auto text-slate-800 font-sans">
+      <main>
         <div className="flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-extrabold text-slate-800">All Users</h1>
@@ -138,15 +159,43 @@ export default function AdminUsers() {
           </button>
         </div>
 
-        {roleFilter && (
-          <div className="mb-4 flex items-center gap-2 bg-slate-100 px-4 py-2 rounded-lg">
-            <Filter size={16} className="text-slate-600" />
-            <span className="text-slate-600">Filtered by role: <strong>{roleFilter}</strong></span>
-            <button onClick={() => router.push('/admin/users')} className="ml-auto text-slate-500 hover:text-slate-700">
-              <X size={18} />
+        <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4 bg-white p-4 rounded-2xl shadow-sm border border-slate-100">
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <Filter size={18} className="text-slate-400" />
+              <select value={filterRole} onChange={e => setFilterRole(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-slate-400">
+                <option value="All">All Roles</option>
+                <option value="Admin">Admin</option>
+                <option value="Teacher">Teacher</option>
+                <option value="Student">Student</option>
+              </select>
+            </div>
+            <div className="flex items-center gap-2">
+              <select value={filterDate} onChange={e => setFilterDate(e.target.value)} className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-slate-400">
+                <option value="All">All Time</option>
+                <option value="Today">Today</option>
+                <option value="This Week">This Week</option>
+                <option value="This Month">This Month</option>
+                <option value="This Year">This Year</option>
+              </select>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-slate-500 font-medium">Sort by:</span>
+              <select value={sortField} onChange={e => setSortField(e.target.value as any)} className="bg-slate-50 border border-slate-200 text-slate-700 rounded-lg px-3 py-1.5 text-sm outline-none focus:ring-2 focus:ring-slate-400">
+                <option value="name">Name</option>
+                <option value="email">Email</option>
+                <option value="role">Role</option>
+                <option value="createdAt">Created Date</option>
+              </select>
+            </div>
+            <button onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')} className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-slate-600 hover:bg-slate-100 transition-colors">
+              {sortOrder === 'asc' ? '↑ Asc' : '↓ Desc'}
             </button>
           </div>
-        )}
+        </div>
 
         {loading ? (
           <div className="text-center py-12">
@@ -194,6 +243,40 @@ export default function AdminUsers() {
                 ))}
               </tbody>
             </table>
+            
+            {/* Pagination Controls */}
+            <div className="bg-slate-50 border-t border-slate-100 p-4 flex items-center justify-between">
+              <div className="text-sm text-slate-600">
+                Showing <span className="font-semibold">{(page - 1) * pageSize + 1}</span> to <span className="font-semibold">{Math.min(page * pageSize, totalCount)}</span> of <span className="font-semibold">{totalCount}</span> results
+              </div>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))} 
+                  disabled={page === 1}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 font-medium text-sm transition-colors"
+                >
+                  Previous
+                </button>
+                <div className="flex items-center gap-1">
+                  {Array.from({ length: Math.ceil(totalCount / pageSize) }, (_, i) => i + 1).map(pageNum => (
+                    <button
+                      key={pageNum}
+                      onClick={() => setPage(pageNum)}
+                      className={`w-8 h-8 rounded-lg text-sm font-medium transition-colors ${page === pageNum ? 'bg-slate-800 text-white' : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'}`}
+                    >
+                      {pageNum}
+                    </button>
+                  ))}
+                </div>
+                <button 
+                  onClick={() => setPage(p => Math.min(Math.ceil(totalCount / pageSize), p + 1))} 
+                  disabled={page === Math.ceil(totalCount / pageSize) || totalCount === 0}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-600 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-slate-50 font-medium text-sm transition-colors"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
           </div>
         )}
       </main>

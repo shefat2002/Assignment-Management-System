@@ -35,6 +35,41 @@ public class AdminService : IAdminService
     
     // User 
     public async Task<IEnumerable<User>> GetAllUsersAsync() => await _userRepository.GetAllAsync();
+    
+    public async Task<(IEnumerable<User> Users, int TotalCount)> GetPagedUsersAsync(string role = null, string filterDate = null, string sortField = null, string sortOrder = null, int page = 1, int pageSize = 10)
+    {
+        var now = DateTime.UtcNow;
+        UserRole? parsedRole = null;
+        if (!string.IsNullOrEmpty(role) && role != "All")
+        {
+            if (Enum.TryParse<UserRole>(role, out var r))
+                parsedRole = r;
+        }
+
+        return await _userRepository.GetPagedFilteredAndSortedAsync(
+            filter: u => 
+                (!parsedRole.HasValue || u.Role == parsedRole.Value) &&
+                (string.IsNullOrEmpty(filterDate) || filterDate == "All" || 
+                 (filterDate == "Today" && u.CreatedAt.Date == now.Date) ||
+                 (filterDate == "This Week" && u.CreatedAt >= now.AddDays(-7)) ||
+                 (filterDate == "This Month" && u.CreatedAt.Month == now.Month && u.CreatedAt.Year == now.Year) ||
+                 (filterDate == "This Year" && u.CreatedAt.Year == now.Year)),
+            orderBy: q =>
+            {
+                bool isDesc = sortOrder?.ToLower() == "desc";
+                var field = sortField?.ToLower();
+                return field switch
+                {
+                    "email" => isDesc ? q.OrderByDescending(x => x.Email) : q.OrderBy(x => x.Email),
+                    "role" => isDesc ? q.OrderByDescending(x => x.Role) : q.OrderBy(x => x.Role),
+                    "createdat" => isDesc ? q.OrderByDescending(x => x.CreatedAt) : q.OrderBy(x => x.CreatedAt),
+                    _ => isDesc ? q.OrderByDescending(x => x.FirstName).ThenByDescending(x => x.LastName) : q.OrderBy(x => x.FirstName).ThenBy(x => x.LastName)
+                };
+            },
+            page: page,
+            pageSize: pageSize
+        );
+    }
     public async Task<User?> GetUserByIdAsync(int id) => await _userRepository.GetByIdAsync(id);
 
     public async Task<User> CreateUserAsync(CreateUserDto dto)
