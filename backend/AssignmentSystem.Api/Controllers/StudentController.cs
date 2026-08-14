@@ -98,4 +98,30 @@ public class StudentController : ControllerBase
         catch (InvalidOperationException ex) { return BadRequest(new { Message = ex.Message }); }
         catch (Exception ex) { return StatusCode(500, new { Message = "An error occurred while submitting.", Details = ex.Message }); }
     }
+
+    [HttpGet("submissions")]
+    public async Task<IActionResult> GetMySubmissions()
+    {
+        try
+        {
+            var submissions = await _studentService.GetMySubmissionsAsync(GetUserId());
+            return Ok(submissions.Select(s => new
+            {
+                s.Id,
+                AssignmentId = s.AssignmentId,
+                AssignmentTitle = s.Assignment!.Title,
+                SubjectName = s.Assignment.Subject!.Name,
+                Deadline = s.Assignment.Deadline,
+                MaxMarks = s.Assignment.MaxMarks,
+                AllowResubmission = s.Assignment.AllowResubmission,
+                s.Content,
+                s.SubmittedAt,
+                s.MarksAwarded,
+                s.Feedback,
+                Status = s.Status.ToString(),
+                Attachments = s.Attachments.Select(a => new { a.OriginalFileName, a.FilePath })
+            }));
+        }
+        catch (UnauthorizedAccessException ex) { return Unauthorized(new { Message = ex.Message }); }
+    }
 }
