@@ -120,7 +120,7 @@ public class AdminService : IAdminService
 
     public async Task<Class> CreateClassAsync(CreateClassDto dto)
     {
-        var newClass = new Class { Name = dto.Name, Description = dto.Description };
+        var newClass = new Class { Name = dto.Name, Section = dto.Section, Year = dto.Year, Description = dto.Description };
         await _classRepository.AddAsync(newClass);
         await _classRepository.SaveChangesAsync();
         return newClass;
@@ -130,6 +130,8 @@ public class AdminService : IAdminService
     {
         var classEntity = await _classRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Class not found.");
         classEntity.Name = dto.Name;
+        classEntity.Section = dto.Section;
+        classEntity.Year = dto.Year;
         classEntity.Description = dto.Description;
 
         _classRepository.Update(classEntity);
@@ -150,7 +152,7 @@ public class AdminService : IAdminService
 
     public async Task<Subject> CreateSubjectAsync(CreateSubjectDto dto)
     {
-        var subject = new Subject { Name = dto.Name, Description = dto.Description };
+        var subject = new Subject { Code = dto.Code, Name = dto.Name, ClassId = dto.ClassId, Description = dto.Description };
         await _subjectRepository.AddAsync(subject);
         await _subjectRepository.SaveChangesAsync();
         return subject;
@@ -159,7 +161,9 @@ public class AdminService : IAdminService
     public async Task UpdateSubjectAsync(int id, UpdateSubjectDto dto)
     {
         var subject = await _subjectRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Subject not found.");
+        subject.Code = dto.Code;
         subject.Name = dto.Name;
+        subject.ClassId = dto.ClassId;
         subject.Description = dto.Description;
 
         _subjectRepository.Update(subject);
