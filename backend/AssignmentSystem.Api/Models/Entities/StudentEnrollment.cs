@@ -9,4 +9,6 @@ public class StudentEnrollment
         
     public int ClassId { get; set; }
     public Class? Class { get; set; }
+        
+    public string Section { get; set; } = string.Empty;
 }

@@ -9,5 +9,6 @@ public class CreateAssignmentDto
     public bool AllowResubmission { get; set; }
     public int ClassId { get; set; }
     public int SubjectId { get; set; }
+    public string Section { get; set; } = string.Empty;
     
 }

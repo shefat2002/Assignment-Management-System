@@ -12,4 +12,6 @@ public class TeacherAssignment
         
     public int SubjectId { get; set; }
     public Subject? Subject { get; set; }
+        
+    public string Section { get; set; } = string.Empty;
 }

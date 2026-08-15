@@ -29,10 +29,10 @@ public class TeacherService : ITeacherService
     public async Task<Assignment> CreateAssignmentAsync(int teacherId, CreateAssignmentDto dto)
     {
         var isAuthorized = await _teacherAssignmentRepository.AnyAsync(ta => 
-            ta.TeacherId == teacherId && ta.ClassId == dto.ClassId && ta.SubjectId == dto.SubjectId);
+            ta.TeacherId == teacherId && ta.ClassId == dto.ClassId && ta.SubjectId == dto.SubjectId && ta.Section == dto.Section);
 
         if (!isAuthorized)
-            throw new UnauthorizedAccessException("You are not authorized to create assignments for this class and subject.");
+            throw new UnauthorizedAccessException("You are not authorized to create assignments for this class, subject, and section.");
 
         var newAssignment = new Assignment
         {
@@ -43,6 +43,7 @@ public class TeacherService : ITeacherService
             AllowResubmission = dto.AllowResubmission,
             ClassId = dto.ClassId,
             SubjectId = dto.SubjectId,
+            Section = dto.Section,
             TeacherId = teacherId,
             Status = AssignmentStatus.Draft
         };
@@ -108,7 +109,10 @@ public class TeacherService : ITeacherService
             se => classIds.Contains(se.ClassId), 
             se => se.Student!);
 
-        return enrollments.Select(se => se.Student!).DistinctBy(s => s.Id);
+        var filteredEnrollments = enrollments.Where(se => 
+            teacherAssignments.Any(ta => ta.ClassId == se.ClassId && ta.Section == se.Section));
+
+        return filteredEnrollments.Select(se => se.Student!).DistinctBy(s => s.Id);
     }
 
     public async Task<IEnumerable<Submission>> GetAssignmentSubmissionsAsync(int teacherId, int assignmentId)

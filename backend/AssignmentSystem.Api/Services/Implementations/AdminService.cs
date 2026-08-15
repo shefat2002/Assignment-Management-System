@@ -120,7 +120,7 @@ public class AdminService : IAdminService
 
     public async Task<Class> CreateClassAsync(CreateClassDto dto)
     {
-        var newClass = new Class { Name = dto.Name, Section = dto.Section, Year = dto.Year, Description = dto.Description };
+        var newClass = new Class { Name = dto.Name, NumberOfSections = dto.NumberOfSections, Year = dto.Year, Description = dto.Description };
         await _classRepository.AddAsync(newClass);
         await _classRepository.SaveChangesAsync();
         return newClass;
@@ -130,7 +130,7 @@ public class AdminService : IAdminService
     {
         var classEntity = await _classRepository.GetByIdAsync(id) ?? throw new KeyNotFoundException("Class not found.");
         classEntity.Name = dto.Name;
-        classEntity.Section = dto.Section;
+        classEntity.NumberOfSections = dto.NumberOfSections;
         classEntity.Year = dto.Year;
         classEntity.Description = dto.Description;
 
@@ -184,14 +184,15 @@ public class AdminService : IAdminService
         var teacher = await _userRepository.FirstOrDefaultAsync(u => u.Id == dto.TeacherId && u.Role == UserRole.Teacher) 
                       ?? throw new KeyNotFoundException("Teacher not found.");
 
-        if (await _teacherAssignmentRepository.AnyAsync(ta => ta.TeacherId == dto.TeacherId && ta.ClassId == dto.ClassId && ta.SubjectId == dto.SubjectId))
-            throw new InvalidOperationException("Teacher is already assigned to this class and subject combination.");
+        if (await _teacherAssignmentRepository.AnyAsync(ta => ta.TeacherId == dto.TeacherId && ta.ClassId == dto.ClassId && ta.SubjectId == dto.SubjectId && ta.Section == dto.Section))
+            throw new InvalidOperationException("Teacher is already assigned to this class, subject, and section combination.");
 
         var assignment = new TeacherAssignment
         {
             TeacherId = dto.TeacherId,
             ClassId = dto.ClassId,
-            SubjectId = dto.SubjectId
+            SubjectId = dto.SubjectId,
+            Section = dto.Section
         };
 
         await _teacherAssignmentRepository.AddAsync(assignment);
@@ -211,13 +212,14 @@ public class AdminService : IAdminService
         var student = await _userRepository.FirstOrDefaultAsync(u => u.Id == dto.StudentId && u.Role == UserRole.Student) 
                       ?? throw new KeyNotFoundException("Student not found.");
 
-        if (await _studentEnrollmentRepository.AnyAsync(se => se.StudentId == dto.StudentId && se.ClassId == dto.ClassId))
-            throw new InvalidOperationException("Student is already enrolled in this class.");
+        if (await _studentEnrollmentRepository.AnyAsync(se => se.StudentId == dto.StudentId && se.ClassId == dto.ClassId && se.Section == dto.Section))
+            throw new InvalidOperationException("Student is already enrolled in this class and section.");
 
         var enrollment = new StudentEnrollment
         {
             StudentId = dto.StudentId,
-            ClassId = dto.ClassId
+            ClassId = dto.ClassId,
+            Section = dto.Section
         };
 
         await _studentEnrollmentRepository.AddAsync(enrollment);
