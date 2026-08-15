@@ -61,4 +61,22 @@ public class AuthService : IAuthService
         };
 
     }
+
+    public async Task ChangePasswordAsync(int userId, ChangePasswordDto request)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null)
+        {
+            throw new InvalidOperationException("User not found.");
+        }
+
+        if (!BCrypt.Net.BCrypt.Verify(request.CurrentPassword, user.PasswordHash))
+        {
+            throw new UnauthorizedAccessException("Incorrect current password.");
+        }
+
+        user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(request.NewPassword);
+        _userRepository.Update(user);
+        await _userRepository.SaveChangesAsync();
+    }
 }

@@ -145,6 +145,11 @@ public class AdminService : IAdminService
         await _classRepository.SaveChangesAsync();
     }
     
+    public async Task<IEnumerable<StudentEnrollment>> GetClassEnrollmentsAsync(int classId)
+    {
+        return await _studentEnrollmentRepository.FindWithIncludesAsync(e => e.ClassId == classId, e => e.Student);
+    }
+    
     // Subject
     public async Task<IEnumerable<Subject>> GetAllSubjectsAsync() => await _subjectRepository.GetAllAsync();
 

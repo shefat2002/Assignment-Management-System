@@ -14,7 +14,8 @@ import {
   Menu,
   X,
   Settings,
-  Bell
+  Bell,
+  UserPlus
 } from 'lucide-react';
 
 interface DashboardLayoutProps {
@@ -80,6 +81,8 @@ export default function DashboardLayout({ children, allowedRole }: DashboardLayo
           { name: 'Users', href: '/admin/users', icon: Users },
           { name: 'Classes', href: '/admin/classes', icon: Library },
           { name: 'Subjects', href: '/admin/subjects', icon: BookOpen },
+          { name: 'Assign Teacher', href: '/admin/assign-teacher', icon: UserPlus },
+          { name: 'Enroll Student', href: '/admin/enroll-student', icon: UserPlus },
           { name: 'Assignments', href: '/admin/assignments', icon: FileText },
           { name: 'Submissions', href: '/admin/submissions', icon: CheckSquare },
         ];
@@ -89,12 +92,14 @@ export default function DashboardLayout({ children, allowedRole }: DashboardLayo
           { name: 'Classes', href: '/teacher/classes', icon: Library },
           { name: 'Assignments', href: '/teacher/assignments', icon: FileText },
           { name: 'Submissions', href: '/teacher/submissions', icon: CheckSquare },
+          { name: 'Settings', href: '/teacher/settings', icon: Settings },
         ];
       case 'Student':
         return [
           { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
           { name: 'My Courses', href: '/student/courses', icon: Library },
           { name: 'My Assignments', href: '/student/assignments', icon: FileText },
+          { name: 'Settings', href: '/student/settings', icon: Settings },
         ];
       default:
         return [];

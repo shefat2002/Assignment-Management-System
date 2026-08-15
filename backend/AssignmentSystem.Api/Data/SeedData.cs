@@ -11,9 +11,9 @@ public static class SeedData
 {
     public static async Task SeedAsync(AppDbContext context)
     {
-        // Drop the existing data completely and recreate the schema
+        // Drop the existing data completely and recreate the schema via migrations
         await context.Database.EnsureDeletedAsync();
-        await context.Database.EnsureCreatedAsync();
+        await context.Database.MigrateAsync();
 
         // Load passwords from environment variables for security, fallback to defaults for local dev
         var adminPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD") ?? "Admin123!";

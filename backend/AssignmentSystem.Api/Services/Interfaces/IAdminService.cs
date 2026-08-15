@@ -19,6 +19,7 @@ public interface IAdminService
     Task<Class> CreateClassAsync(CreateClassDto dto);
     Task UpdateClassAsync(int id, UpdateClassDto dto);
     Task DeleteClassAsync(int id);
+    Task<IEnumerable<StudentEnrollment>> GetClassEnrollmentsAsync(int classId);
 
     // Subjects
     Task<IEnumerable<Subject>> GetAllSubjectsAsync();

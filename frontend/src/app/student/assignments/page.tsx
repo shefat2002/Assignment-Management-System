@@ -183,7 +183,7 @@ export default function StudentAssignments() {
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Your Answer</label>
-                <textarea required value={submitContent} onChange={e => setSubmitContent(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-orange-400" rows={4} placeholder="Type your answer or notes here..."></textarea>
+                <textarea required value={submitContent} onChange={e => setSubmitContent(e.target.value)} className="w-full px-4 py-3 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-orange-400" rows={4} placeholder="Type your answer or notes here..."></textarea>
               </div>
               <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
                 <input type="file" multiple onChange={(e) => setSubmitFiles(e.target.files)} className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-orange-100 file:text-orange-700 cursor-pointer" />
