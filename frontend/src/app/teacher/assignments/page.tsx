@@ -148,38 +148,38 @@ export default function TeacherAssignments() {
             <form onSubmit={handleCreateAssignment} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Title</label>
-                <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-400" />
+                <input type="text" required value={formData.title} onChange={e => setFormData({...formData, title: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-purple-400" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-purple-400" rows={3}></textarea>
+                <textarea required value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-purple-400" rows={3}></textarea>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Due Date</label>
-                  <input type="datetime-local" required value={formData.dueDate} onChange={e => setFormData({...formData, dueDate: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                  <input type="datetime-local" required value={formData.dueDate} onChange={e => setFormData({...formData, dueDate: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Max Marks</label>
-                  <input type="number" required min="1" value={formData.totalMarks} onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                  <input type="number" required min="1" value={formData.totalMarks} onChange={e => setFormData({...formData, totalMarks: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" />
                 </div>
               </div>
               {!isEditMode && (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Class ID</label>
-                    <input type="number" required value={formData.classId} onChange={e => setFormData({...formData, classId: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                    <input type="number" required value={formData.classId} onChange={e => setFormData({...formData, classId: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" />
                   </div>
                   <div>
                     <label className="block text-sm font-bold text-slate-700 mb-1">Subject ID</label>
-                    <input type="number" required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                    <input type="number" required value={formData.subjectId} onChange={e => setFormData({...formData, subjectId: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" />
                   </div>
                 </div>
               )}
               {isEditMode && (
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Status</label>
-                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                  <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none">
                     <option value="Active">Active</option>
                     <option value="Closed">Closed</option>
                   </select>

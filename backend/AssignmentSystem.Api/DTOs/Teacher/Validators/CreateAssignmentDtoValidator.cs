@@ -25,5 +25,8 @@ public class CreateAssignmentDtoValidator: AbstractValidator<CreateAssignmentDto
 
         RuleFor(x => x.SubjectId)
             .GreaterThan(0).WithMessage("A valid subject id is required");
+
+        RuleFor(x => x.Section)
+            .NotEmpty().WithMessage("Section is required");
     }
 }

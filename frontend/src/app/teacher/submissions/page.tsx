@@ -183,18 +183,18 @@ export default function SubmissionsDashboard() {
             <form onSubmit={handleGrade} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Marks Awarded</label>
-                <input type="number" required min="0" value={gradeData.marks} onChange={e => setGradeData({...gradeData, marks: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                <input type="number" required min="0" value={gradeData.marks} onChange={e => setGradeData({...gradeData, marks: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" />
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Status</label>
-                <select value={gradeData.status} onChange={e => setGradeData({...gradeData, status: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none">
+                <select value={gradeData.status} onChange={e => setGradeData({...gradeData, status: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none">
                   <option value="Graded">Graded</option>
                   <option value="Rejected">Rejected</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Feedback</label>
-                <textarea value={gradeData.feedback} onChange={e => setGradeData({...gradeData, feedback: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" rows={3}></textarea>
+                <textarea value={gradeData.feedback} onChange={e => setGradeData({...gradeData, feedback: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" rows={3}></textarea>
               </div>
               <button type="submit" className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 rounded-xl transition-all shadow-md">
                 Submit Grade

@@ -30,4 +30,24 @@ public class AuthController:ControllerBase
         catch (Exception) { return StatusCode(500, new { Message = "An error occurred during login." }); }
     }
 
+    [Authorize]
+    [HttpPost("change-password")]
+    public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto request)
+    {
+        try
+        {
+            var userIdStr = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
+            if (string.IsNullOrEmpty(userIdStr) || !int.TryParse(userIdStr, out int userId))
+            {
+                return Unauthorized(new { Message = "User ID not found in token." });
+            }
+
+            await _authService.ChangePasswordAsync(userId, request);
+            return Ok(new { Message = "Password changed successfully." });
+        }
+        catch (UnauthorizedAccessException ex) { return BadRequest(new { Message = ex.Message }); }
+        catch (InvalidOperationException ex) { return NotFound(new { Message = ex.Message }); }
+        catch (Exception) { return StatusCode(500, new { Message = "An error occurred while changing the password." }); }
+    }
+
 }

@@ -119,6 +119,22 @@ public class AdminController : ControllerBase
         catch (KeyNotFoundException ex) { return NotFound(new { Message = ex.Message }); }
     }
     
+    [HttpGet("classes/{id}/students")]
+    public async Task<IActionResult> GetClassStudents(int id)
+    {
+        var enrollments = await _adminService.GetClassEnrollmentsAsync(id);
+        var students = enrollments.Select(e => new 
+        {
+            e.Id,
+            e.StudentId,
+            FirstName = e.Student!.FirstName,
+            LastName = e.Student.LastName,
+            Email = e.Student.Email,
+            Section = e.Section
+        });
+        return Ok(students);
+    }
+    
     // Subject
     [HttpGet("subjects")]
     public async Task<IActionResult> GetSubjects() => Ok(await _adminService.GetAllSubjectsAsync());

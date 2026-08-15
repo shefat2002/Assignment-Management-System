@@ -18,6 +18,8 @@ public class Assignment
     public int ClassId { get; set; }
     public Class? Class { get; set; }
 
+    public string Section { get; set; } = string.Empty;
+
     public int SubjectId { get; set; }
     public Subject? Subject { get; set; }
 

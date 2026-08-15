@@ -19,7 +19,7 @@ public class CreateClassDtoValidator : AbstractValidator<CreateClassDto>
     public CreateClassDtoValidator()
     {
         RuleFor(x => x.Name).NotEmpty().MaximumLength(100).WithMessage("Class name is required and should not exceed 100 characters.");
-        RuleFor(x => x.Section).NotEmpty().MaximumLength(50).WithMessage("Section is required and should not exceed 50 characters.");
+        RuleFor(x => x.NumberOfSections).GreaterThan(0).WithMessage("Number of sections must be greater than 0.");
         RuleFor(x => x.Year).GreaterThan(0).WithMessage("Year must be valid.");
     }
 }
@@ -41,6 +41,7 @@ public class AssignTeacherDtoValidator : AbstractValidator<AssignTeacherDto>
         RuleFor(x => x.TeacherId).GreaterThan(0).WithMessage("Teacher ID is required");
         RuleFor(x => x.ClassId).GreaterThan(0).WithMessage("Class ID is required");
         RuleFor(x => x.SubjectId).GreaterThan(0).WithMessage("Subject ID is required");
+        RuleFor(x => x.Section).NotEmpty().WithMessage("Section is required");
     }
 }
 
@@ -50,5 +51,6 @@ public class EnrollStudentDtoValidator : AbstractValidator<EnrollStudentDto>
     {
         RuleFor(x => x.StudentId).GreaterThan(0).WithMessage("Student ID is required");
         RuleFor(x => x.ClassId).GreaterThan(0).WithMessage("Class ID is required");
+        RuleFor(x => x.Section).NotEmpty().WithMessage("Section is required");
     }
 }

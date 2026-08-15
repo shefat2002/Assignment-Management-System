@@ -30,11 +30,13 @@ public class StudentService : IStudentService
         var enrollments = await _enrollmentRepository.FindAsync(se => se.StudentId == studentId);
         var enrolledClassIds = enrollments.Select(se => se.ClassId).ToList();
 
-        return await _assignmentRepository.FindWithIncludesAsync(
+        var assignments = await _assignmentRepository.FindWithIncludesAsync(
             a => enrolledClassIds.Contains(a.ClassId) && a.Status == AssignmentStatus.Published,
             a => a.Subject!,
             a => a.Teacher!,
             a => a.Class!);
+
+        return assignments.Where(a => enrollments.Any(e => e.ClassId == a.ClassId && e.Section == a.Section));
     }
 
     public async Task<Assignment?> GetAssignmentByIdAsync(int studentId, int assignmentId)
@@ -48,8 +50,8 @@ public class StudentService : IStudentService
         if (assignment == null) return null;
 
         // Verify enrollment
-        if (!await _enrollmentRepository.AnyAsync(se => se.StudentId == studentId && se.ClassId == assignment.ClassId))
-            throw new UnauthorizedAccessException("You are not enrolled in the class for this assignment.");
+        if (!await _enrollmentRepository.AnyAsync(se => se.StudentId == studentId && se.ClassId == assignment.ClassId && se.Section == assignment.Section))
+            throw new UnauthorizedAccessException("You are not enrolled in the class/section for this assignment.");
 
         return assignment;
     }
@@ -69,8 +71,8 @@ public class StudentService : IStudentService
         if (assignment.Status != AssignmentStatus.Published)
             throw new KeyNotFoundException("Assignment not found or not published.");
 
-        if (!await _enrollmentRepository.AnyAsync(se => se.StudentId == studentId && se.ClassId == assignment.ClassId))
-            throw new UnauthorizedAccessException("You are not enrolled in the class for this assignment.");
+        if (!await _enrollmentRepository.AnyAsync(se => se.StudentId == studentId && se.ClassId == assignment.ClassId && se.Section == assignment.Section))
+            throw new UnauthorizedAccessException("You are not enrolled in the class/section for this assignment.");
 
         var existingSubmission = await _submissionRepository.FirstOrDefaultWithIncludesAsync(
             s => s.AssignmentId == assignmentId && s.StudentId == studentId, 

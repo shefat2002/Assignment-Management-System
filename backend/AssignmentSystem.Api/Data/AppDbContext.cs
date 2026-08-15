@@ -34,7 +34,6 @@ public class AppDbContext : DbContext
         });
         
         modelBuilder.Entity<Class>().Property(c => c.Name).IsRequired().HasMaxLength(100);
-        modelBuilder.Entity<Class>().Property(c => c.Section).HasMaxLength(50);
         
         modelBuilder.Entity<Subject>().Property(s => s.Name).IsRequired().HasMaxLength(100);
         modelBuilder.Entity<Subject>().Property(s => s.Code).IsRequired().HasMaxLength(50);
@@ -57,8 +56,8 @@ public class AppDbContext : DbContext
                 .HasForeignKey(te => te.TeacherId)
                 .OnDelete(DeleteBehavior.Restrict);
             
-            // note: A teacher cannot be assigned to the exact same class and subject twice
-            entity.HasIndex(te => new { te.TeacherId, te.ClassId, te.SubjectId }).IsUnique();
+            // note: A teacher cannot be assigned to the exact same class, subject, and section twice
+            entity.HasIndex(te => new { te.TeacherId, te.ClassId, te.SubjectId, te.Section }).IsUnique();
         });
         
         modelBuilder.Entity<Assignment>(entity =>

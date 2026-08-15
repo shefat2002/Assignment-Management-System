@@ -9,15 +9,16 @@ import api from '@/lib/axios';
 interface Class {
   id: number;
   name: string;
-  section: string;
+  numberOfSections: number;
   year: number;
   description?: string;
-  students?: Array<{ id: number; firstName: string; lastName: string }>;
+  students?: Array<{ id: number; studentId: number; firstName: string; lastName: string; email: string; section: string }>;
 }
 
 export default function AdminClasses() {
   const router = useRouter();
   const [classes, setClasses] = useState<Class[]>([]);
+  const [students, setStudents] = useState<any[]>([]);
   const [selectedClass, setSelectedClass] = useState<Class | null>(null);
   const [isCreateModal, setIsCreateModal] = useState(false);
   const [isEditModal, setIsEditModal] = useState(false);
@@ -26,7 +27,7 @@ export default function AdminClasses() {
 
   const [formData, setFormData] = useState({
     name: '',
-    section: 'A',
+    numberOfSections: 2,
     year: new Date().getFullYear(),
     description: ''
   });
@@ -42,14 +43,23 @@ export default function AdminClasses() {
     }
   };
 
-  useEffect(() => { fetchClasses(); }, []);
+  const fetchStudents = async () => {
+    try {
+      const response = await api.get('/admin/users?role=Student&pageSize=1000');
+      setStudents(response.data.users || response.data.Users || response.data || []);
+    } catch (error) {
+      console.error('Failed to fetch students', error);
+    }
+  };
+
+  useEffect(() => { fetchClasses(); fetchStudents(); }, []);
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       await api.post('/admin/classes', formData);
       setIsCreateModal(false);
-      setFormData({ name: '', section: 'A', year: new Date().getFullYear(), description: '' });
+      setFormData({ name: '', numberOfSections: 2, year: new Date().getFullYear(), description: '' });
       fetchClasses();
     } catch (error: any) {
       alert(error.response?.data?.message || 'Error creating class');
@@ -83,7 +93,7 @@ export default function AdminClasses() {
 
   const openEdit = (cls: Class) => {
     setSelectedClass(cls);
-    setFormData({ name: cls.name, section: cls.section, year: cls.year, description: cls.description || '' });
+    setFormData({ name: cls.name, numberOfSections: cls.numberOfSections, year: cls.year, description: cls.description || '' });
     setIsEditModal(true);
   };
 
@@ -92,10 +102,16 @@ export default function AdminClasses() {
     setIsDeleteConfirm(true);
   };
 
+  const [sectionFilter, setSectionFilter] = useState<string>('All');
+
   const viewClass = async (cls: Class) => {
     try {
-      const response = await api.get(`/admin/classes/${cls.id}`);
-      setSelectedClass({ ...cls, ...response.data });
+      setSectionFilter('All');
+      const [response, studentsResponse] = await Promise.all([
+        api.get(`/admin/classes/${cls.id}`),
+        api.get(`/admin/classes/${cls.id}/students`)
+      ]);
+      setSelectedClass({ ...cls, ...response.data, students: studentsResponse.data });
     } catch (error) {
       console.error('Failed to fetch class details', error);
     }
@@ -125,7 +141,7 @@ export default function AdminClasses() {
                 <div className="flex justify-between items-start mb-4">
                   <div>
                     <h3 className="text-lg font-bold text-slate-800">{cls.name}</h3>
-                    <p className="text-sm text-slate-500">Section {cls.section}</p>
+                    <p className="text-sm text-slate-500">{cls.numberOfSections} Sections</p>
                   </div>
                   <span className="bg-orange-100 text-orange-700 px-3 py-1 rounded-full text-xs font-bold">
                     {cls.year}
@@ -161,23 +177,21 @@ export default function AdminClasses() {
             <form onSubmit={handleCreate} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Class Name</label>
-                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" placeholder="e.g., Class 10-A" />
+                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-slate-400" placeholder="e.g., Class 10-A" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Section</label>
-                  <select value={formData.section} onChange={e => setFormData({...formData, section: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none">
-                    {['A','B','C','D','E','F'].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Number of Sections</label>
+                  <input type="number" required value={(formData as any).numberOfSections || 2} onChange={e => setFormData({...formData, numberOfSections: parseInt(e.target.value)} as any)} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" min={1} />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Year</label>
-                  <input type="number" required value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                  <input type="number" required value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={2}></textarea>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={2}></textarea>
               </div>
               <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Create Class
@@ -200,23 +214,21 @@ export default function AdminClasses() {
             <form onSubmit={handleUpdate} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Class Name</label>
-                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" />
+                <input type="text" required value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-slate-400" />
               </div>
               <div className="grid grid-cols-3 gap-4">
                 <div>
-                  <label className="block text-sm font-bold text-slate-700 mb-1">Section</label>
-                  <select value={formData.section} onChange={e => setFormData({...formData, section: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none">
-                    {['A','B','C','D','E','F'].map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                  <label className="block text-sm font-bold text-slate-700 mb-1">Number of Sections</label>
+                  <input type="number" required value={(formData as any).numberOfSections || 2} onChange={e => setFormData({...formData, numberOfSections: parseInt(e.target.value)} as any)} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" min={1} />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-slate-700 mb-1">Year</label>
-                  <input type="number" required value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none" />
+                  <input type="number" required value={formData.year} onChange={e => setFormData({...formData, year: parseInt(e.target.value)})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none" />
                 </div>
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 mb-1">Description</label>
-                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={2}></textarea>
+                <textarea value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} className="w-full px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-slate-400" rows={2}></textarea>
               </div>
               <button type="submit" className="w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-3 rounded-xl transition-colors">
                 Update Class
@@ -266,8 +278,8 @@ export default function AdminClasses() {
                   <p className="text-xl font-bold text-slate-800">{selectedClass.name}</p>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl">
-                  <p className="text-sm text-slate-500">Section</p>
-                  <p className="text-xl font-bold text-slate-800">{selectedClass.section}</p>
+                  <p className="text-sm text-slate-500">Sections</p>
+                  <p className="text-xl font-bold text-slate-800">{selectedClass.numberOfSections}</p>
                 </div>
                 <div className="bg-slate-50 p-4 rounded-xl">
                   <p className="text-sm text-slate-500">Year</p>
@@ -281,28 +293,47 @@ export default function AdminClasses() {
 
               {selectedClass.students && selectedClass.students.length > 0 ? (
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                    <Users size={20} /> Enrolled Students
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {selectedClass.students.map((student) => (
-                      <div key={student.id} className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
-                        <div>
-                          <p className="font-semibold text-slate-800">{student.firstName} {student.lastName}</p>
-                          <p className="text-sm text-slate-500">ID: #{student.id}</p>
-                        </div>
-                        <button onClick={async () => {
-                          try {
-                             await api.delete(`/admin/enroll-student/${student.id}`);
-                             viewClass(selectedClass);
-                             fetchClasses();
-                          } catch(err: any) { alert(err.response?.data?.message || 'Error unenrolling'); }
-                        }} className="p-2 hover:bg-red-100 rounded-lg text-red-600" title="Remove Student">
-                          <UserMinus size={18} />
-                        </button>
-                      </div>
-                    ))}
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                      <Users size={20} /> Enrolled Students
+                    </h3>
+                    <select 
+                      value={sectionFilter} 
+                      onChange={e => setSectionFilter(e.target.value)} 
+                      className="px-3 py-1.5 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-lg text-sm outline-none focus:ring-2 focus:ring-slate-400"
+                    >
+                      <option value="All">All Sections</option>
+                      {Array.from({length: selectedClass.numberOfSections || 1}, (_, i) => String.fromCharCode(65 + i)).map(char => (
+                        <option key={char} value={char}>Section {char}</option>
+                      ))}
+                    </select>
                   </div>
+                  
+                  {selectedClass.students.filter(s => sectionFilter === 'All' || s.section === sectionFilter).length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {selectedClass.students.filter(s => sectionFilter === 'All' || s.section === sectionFilter).map((student) => (
+                        <div key={student.id} className="bg-slate-50 p-4 rounded-xl flex items-center justify-between">
+                          <div>
+                            <p className="font-semibold text-slate-800">{student.firstName} {student.lastName}</p>
+                            <p className="text-sm text-slate-500">Sec {student.section} • ID: #{student.studentId}</p>
+                          </div>
+                          <button onClick={async () => {
+                            try {
+                               await api.delete(`/admin/enroll-student/${student.id}`);
+                               viewClass(selectedClass);
+                               fetchClasses();
+                            } catch(err: any) { alert(err.response?.data?.message || 'Error unenrolling'); }
+                          }} className="p-2 hover:bg-red-100 rounded-lg text-red-600" title="Remove Student">
+                            <UserMinus size={18} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-6 bg-slate-50 rounded-xl text-slate-500">
+                      No students in Section {sectionFilter}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="text-center py-8 bg-slate-50 rounded-xl">
@@ -317,14 +348,24 @@ export default function AdminClasses() {
                   e.preventDefault();
                   const target = e.target as any;
                   const studentId = target.studentId.value;
+                  const section = target.section.value;
                   try {
-                    await api.post('/admin/enroll-student', { studentId: parseInt(studentId), classId: selectedClass.id });
+                    await api.post('/admin/enroll-student', { studentId: parseInt(studentId), classId: selectedClass.id, section });
                     target.reset();
                     viewClass(selectedClass);
                     fetchClasses();
                   } catch(err: any) { alert(err.response?.data?.message || 'Error enrolling student'); }
                 }} className="flex gap-3">
-                  <input type="number" name="studentId" required placeholder="Student ID" className="flex-1 px-4 py-2 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-slate-400" />
+                  <select name="studentId" required defaultValue="" className="flex-1 px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-slate-400">
+                    <option value="" disabled>Select Student</option>
+                    {students.map(s => <option key={s.id} value={s.id}>{s.firstName} {s.lastName}</option>)}
+                  </select>
+                  <select name="section" required defaultValue="" className="px-4 py-2 bg-slate-100 border border-slate-300 text-slate-900 font-medium rounded-xl outline-none focus:ring-2 focus:ring-slate-400">
+                    <option value="" disabled>Section</option>
+                    {Array.from({length: selectedClass.numberOfSections || 2}, (_, i) => String.fromCharCode(65 + i)).map(char => (
+                      <option key={char} value={char}>{char}</option>
+                    ))}
+                  </select>
                   <button type="submit" className="bg-emerald-500 hover:bg-emerald-600 text-white font-bold px-6 py-2 rounded-xl transition-colors">
                     Enroll
                   </button>
