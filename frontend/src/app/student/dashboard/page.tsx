@@ -1,201 +1,168 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
-import Cookies from "js-cookie";
-import {
-  GraduationCap,
-  Calendar,
-  FileCheck,
-  LogOut,
-  UploadCloud,
-  X,
-  History,
-} from "lucide-react";
-import api from "@/lib/axios";
+import { useEffect, useState } from 'react';
+import { FileCheck, BookOpen, Clock, Calendar as CalendarIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import api from '@/lib/axios';
 
 export default function StudentDashboard() {
-  const router = useRouter();
-  const [assignments, setAssignments] = useState([]);
-
-  // Modal State
-  const [activeAssignmentId, setActiveAssignmentId] = useState<number | null>(
-    null,
-  );
-  const [content, setContent] = useState("");
-  const [files, setFiles] = useState<FileList | null>(null);
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [stats, setStats] = useState({ pending: 0, completed: 0, subjects: 0 });
+  const [assignments, setAssignments] = useState<any[]>([]);
+  const [submissions, setSubmissions] = useState<any[]>([]);
+  
+  const [currentDate, setCurrentDate] = useState(new Date());
 
   useEffect(() => {
-    const fetchAssignments = async () => {
+    const fetchStats = async () => {
       try {
-        const response = await api.get("/student/assignments");
-        setAssignments(response.data);
+        const [assignmentsRes, submissionsRes] = await Promise.all([
+          api.get('/student/assignments'),
+          api.get('/student/submissions')
+        ]);
+        
+        const fetchedAssignments = assignmentsRes.data;
+        const fetchedSubmissions = submissionsRes.data;
+        
+        setAssignments(fetchedAssignments);
+        setSubmissions(fetchedSubmissions);
+        
+        const subjectSet = new Set(fetchedAssignments.map((a: any) => a.subjectName));
+        
+        const submittedAssignmentIds = new Set(fetchedSubmissions.map((s: any) => s.assignmentId));
+        const pendingCount = fetchedAssignments.filter((a: any) => !submittedAssignmentIds.has(a.id)).length;
+        
+        setStats({
+          pending: pendingCount,
+          completed: fetchedSubmissions.length,
+          subjects: subjectSet.size
+        });
       } catch (error) {
-        console.error("Failed to fetch assignments", error);
+        console.error('Failed to fetch stats', error);
       }
     };
-    fetchAssignments();
-  }, [activeAssignmentId]); // Refresh when modal closes
+    fetchStats();
+  }, []);
 
-  const handleLogout = () => {
-    Cookies.remove("token");
-    Cookies.remove("role");
-    router.push("/");
-  };
+  const submittedAssignmentIds = new Set(submissions.map(s => s.assignmentId));
 
-  const handleSubmitWork = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!activeAssignmentId) return;
-    setIsSubmitting(true);
+  // Calendar Logic
+  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
+  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
+  
+  const handlePrevMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1));
+  const handleNextMonth = () => setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1));
+  
+  const monthName = currentDate.toLocaleString('default', { month: 'long', year: 'numeric' });
 
-    // Prepare Multipart Form Data
-    const formData = new FormData();
-    formData.append("content", content);
-    if (files) {
-      Array.from(files).forEach((file) => formData.append("files", file));
-    }
-
-    try {
-      await api.post(
-        `/student/assignments/${activeAssignmentId}/submit`,
-        formData,
-        {
-          headers: { "Content-Type": "multipart/form-data" },
-        },
-      );
-      alert("Assignment submitted successfully!");
-      setActiveAssignmentId(null);
-      setContent("");
-      setFiles(null);
-    } catch (error: any) {
-      alert(error.response?.data?.message || "Error submitting assignment.");
-    } finally {
-      setIsSubmitting(false);
-    }
+  // Map events to days
+  const getEventsForDay = (day: number) => {
+    return assignments.filter(a => {
+      if (!a.deadline) return false;
+      const d = new Date(a.deadline);
+      return d.getDate() === day && d.getMonth() === currentDate.getMonth() && d.getFullYear() === currentDate.getFullYear();
+    });
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-800 font-sans">
-      <nav className="bg-gradient-to-r from-orange-500 to-yellow-400 shadow-md p-4 flex justify-between items-center text-white">
-        <div className="text-xl font-bold flex items-center gap-2">
-          <GraduationCap /> Student Portal
-        </div>
-        <div className="flex items-center gap-3">
-          <button
-            onClick={() => router.push('/student/submissions')}
-            className="flex items-center gap-2 hover:text-orange-100 transition-colors px-3 py-1 hover:bg-white/10 rounded-lg"
-          >
-            <History size={20} /> My Submissions
-          </button>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 hover:text-orange-100 transition-colors"
-          >
-            <LogOut size={20} /> Logout
-          </button>
-        </div>
-      </nav>
+    <div className="p-6 max-w-7xl mx-auto space-y-6">
+      <h1 className="text-3xl font-extrabold text-slate-800">Welcome to your Workspace</h1>
+      <p className="text-slate-600">Here's your academic progress at a glance.</p>
 
-      <main className="max-w-7xl mx-auto p-6 mt-6">
-        <h1 className="text-3xl font-extrabold mb-8 text-slate-800">
-          Pending Coursework
-        </h1>
-
-        <div className="space-y-4">
-          {assignments.map((assignment: any) => (
-            <div
-              key={assignment.id}
-              className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:border-orange-300 transition-colors border-l-4 border-l-orange-400"
-            >
-              <div className="flex-grow">
-                <div className="flex items-center gap-3 mb-2">
-                  <h2 className="text-xl font-bold text-slate-800">
-                    {assignment.title}
-                  </h2>
-                  <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-bold">
-                    {assignment.subjectName}
-                  </span>
-                </div>
-                <p className="text-slate-600 text-sm mb-3">
-                  {assignment.description}
-                </p>
-                <div className="flex items-center gap-4 text-sm font-semibold text-slate-500">
-                  <span className="flex items-center gap-1">
-                    <Calendar size={16} className="text-orange-500" /> Due:{" "}
-                    {new Date(assignment.deadline).toLocaleDateString()}
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <FileCheck size={16} className="text-green-500" /> Max
-                    Marks: {assignment.maxMarks}
-                  </span>
-                </div>
-              </div>
-              <button
-                onClick={() => setActiveAssignmentId(assignment.id)}
-                className="bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-xl font-semibold transition-colors shadow-sm whitespace-nowrap"
-              >
-                Submit Work
-              </button>
-            </div>
-          ))}
-        </div>
-      </main>
-
-      {/* File Upload Modal */}
-      {activeAssignmentId && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="bg-white rounded-3xl shadow-2xl w-full max-w-lg overflow-hidden animate-in fade-in zoom-in duration-200">
-            <div className="bg-gradient-to-r from-orange-500 to-yellow-400 p-6 flex justify-between items-center text-white">
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <UploadCloud /> Upload Submission
-              </h2>
-              <button
-                onClick={() => setActiveAssignmentId(null)}
-                className="hover:bg-white/20 p-1 rounded-full transition-colors"
-              >
-                <X size={24} />
-              </button>
-            </div>
-
-            <form onSubmit={handleSubmitWork} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-bold text-slate-700 mb-1">
-                  Answer Context / Remarks
-                </label>
-                <textarea
-                  required
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-400 outline-none"
-                  rows={4}
-                  placeholder="Type your answer or notes for the teacher here..."
-                ></textarea>
-              </div>
-
-              <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100 transition-colors">
-                <input
-                  type="file"
-                  multiple
-                  onChange={(e) => setFiles(e.target.files)}
-                  className="w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-bold file:bg-orange-100 file:text-orange-700 hover:file:bg-orange-200 cursor-pointer"
-                />
-                <p className="mt-2 text-xs text-slate-500">
-                  Attach documents, PDFs, or images (Max 100MB)
-                </p>
-              </div>
-
-              <button
-                type="submit"
-                disabled={isSubmitting}
-                className="w-full bg-slate-800 hover:bg-slate-900 disabled:bg-slate-400 text-white font-bold py-3 rounded-xl mt-4 transition-colors"
-              >
-                {isSubmitting ? "Uploading..." : "Confirm Submission"}
-              </button>
-            </form>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-orange-400">
+          <div className="w-14 h-14 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600">
+            <Clock size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Pending Assignments</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.pending}</p>
           </div>
         </div>
-      )}
+        
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-green-400">
+          <div className="w-14 h-14 bg-green-100 rounded-2xl flex items-center justify-center text-green-600">
+            <FileCheck size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Completed</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.completed}</p>
+          </div>
+        </div>
+        
+        <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 flex items-center gap-4 border-l-4 border-l-blue-400">
+          <div className="w-14 h-14 bg-blue-100 rounded-2xl flex items-center justify-center text-blue-600">
+            <BookOpen size={24} />
+          </div>
+          <div>
+            <p className="text-sm font-medium text-slate-500">Active Courses</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.subjects}</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Calendar Section */}
+      <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+        <div className="p-6 border-b border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="p-2 bg-slate-100 rounded-lg text-slate-600">
+              <CalendarIcon size={20} />
+            </div>
+            <h2 className="text-xl font-bold text-slate-800">Assignment Calendar</h2>
+          </div>
+          <div className="flex items-center gap-4">
+            <button onClick={handlePrevMonth} className="p-2 hover:bg-slate-100 rounded-lg transition-colors"><ChevronLeft size={20} /></button>
+            <span className="font-semibold text-slate-700 w-32 text-center">{monthName}</span>
+            <button onClick={handleNextMonth} className="p-2 hover:bg-slate-100 rounded-lg transition-colors"><ChevronRight size={20} /></button>
+          </div>
+        </div>
+
+        <div className="p-6">
+          <div className="grid grid-cols-7 gap-4 mb-4">
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
+              <div key={day} className="text-center text-xs font-bold text-slate-400 uppercase tracking-wider">{day}</div>
+            ))}
+          </div>
+          
+          <div className="grid grid-cols-7 gap-4">
+            {/* Empty slots before the 1st of the month */}
+            {Array.from({ length: firstDayOfMonth }).map((_, i) => (
+              <div key={`empty-${i}`} className="min-h-[100px] rounded-xl border border-dashed border-slate-200 bg-slate-50 opacity-50"></div>
+            ))}
+            
+            {/* Actual days */}
+            {Array.from({ length: daysInMonth }).map((_, i) => {
+              const day = i + 1;
+              const isToday = new Date().getDate() === day && new Date().getMonth() === currentDate.getMonth() && new Date().getFullYear() === currentDate.getFullYear();
+              const dayEvents = getEventsForDay(day);
+              
+              return (
+                <div key={day} className={`min-h-[100px] p-2 rounded-xl border transition-colors ${isToday ? 'border-orange-300 bg-orange-50' : 'border-slate-100 hover:border-slate-300'} flex flex-col`}>
+                  <div className={`text-sm font-semibold mb-2 ${isToday ? 'text-orange-600' : 'text-slate-600'}`}>
+                    {day}
+                  </div>
+                  <div className="flex-1 space-y-1 overflow-y-auto max-h-[80px] scrollbar-hide">
+                    {dayEvents.map(evt => {
+                      const isCompleted = submittedAssignmentIds.has(evt.id);
+                      return (
+                        <div key={evt.id} className={`text-xs px-2 py-1 rounded-md font-medium truncate ${isCompleted ? 'bg-green-100 text-green-700 border border-green-200' : 'bg-orange-100 text-orange-700 border border-orange-200'}`} title={evt.title}>
+                          {evt.title}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        <div className="bg-slate-50 p-4 border-t border-slate-100 flex items-center justify-end gap-6 text-sm font-medium text-slate-600">
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-orange-400"></span> Pending
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="w-3 h-3 rounded-full bg-green-400"></span> Completed
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

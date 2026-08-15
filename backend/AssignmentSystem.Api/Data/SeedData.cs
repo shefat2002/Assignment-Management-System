@@ -1,6 +1,8 @@
 using AssignmentSystem.Api.Models.Entities;
 using AssignmentSystem.Api.Models.Enums;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Threading.Tasks;
 
 namespace AssignmentSystem.Api.Data;
 
@@ -17,13 +19,18 @@ public static class SeedData
             return; // Database already seeded
         }
 
+        // Load passwords from environment variables for security, fallback to defaults for local dev
+        var adminPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD") ?? "Admin123!";
+        var teacherPassword = Environment.GetEnvironmentVariable("SEED_TEACHER_PASSWORD") ?? "Teacher123!";
+        var studentPassword = Environment.GetEnvironmentVariable("SEED_STUDENT_PASSWORD") ?? "Student123!";
+
         // === USERS ===
         var adminUser = new User
         {
             FirstName = "Admin",
             LastName = "User",
             Email = "admin@demo.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Admin123!"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
             Role = UserRole.Admin,
             CreatedAt = DateTime.UtcNow
         };
@@ -33,7 +40,7 @@ public static class SeedData
             FirstName = "John",
             LastName = "Teacher",
             Email = "teacher1@demo.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Teacher123!"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(teacherPassword),
             Role = UserRole.Teacher,
             CreatedAt = DateTime.UtcNow
         };
@@ -43,7 +50,7 @@ public static class SeedData
             FirstName = "Jane",
             LastName = "Instructor",
             Email = "teacher2@demo.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Teacher123!"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(teacherPassword),
             Role = UserRole.Teacher,
             CreatedAt = DateTime.UtcNow
         };
@@ -53,7 +60,7 @@ public static class SeedData
             FirstName = "Alice",
             LastName = "Student",
             Email = "student1@demo.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Student123!"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(studentPassword),
             Role = UserRole.Student,
             CreatedAt = DateTime.UtcNow
         };
@@ -63,7 +70,7 @@ public static class SeedData
             FirstName = "Bob",
             LastName = "Learner",
             Email = "student2@demo.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Student123!"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(studentPassword),
             Role = UserRole.Student,
             CreatedAt = DateTime.UtcNow
         };
@@ -73,7 +80,7 @@ public static class SeedData
             FirstName = "Charlie",
             LastName = "Brown",
             Email = "student3@demo.com",
-            PasswordHash = BCrypt.Net.BCrypt.HashPassword("Student123!"),
+            PasswordHash = BCrypt.Net.BCrypt.HashPassword(studentPassword),
             Role = UserRole.Student,
             CreatedAt = DateTime.UtcNow
         };
