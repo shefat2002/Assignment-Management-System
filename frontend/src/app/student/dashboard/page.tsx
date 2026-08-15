@@ -5,7 +5,7 @@ import { FileCheck, BookOpen, Clock, Calendar as CalendarIcon, ChevronLeft, Chev
 import api from '@/lib/axios';
 
 export default function StudentDashboard() {
-  const [stats, setStats] = useState({ pending: 0, completed: 0, classes: 0 });
+  const [stats, setStats] = useState({ pending: 0, completed: 0, subjects: 0 });
   const [assignments, setAssignments] = useState<any[]>([]);
   const [submissions, setSubmissions] = useState<any[]>([]);
   
@@ -25,7 +25,7 @@ export default function StudentDashboard() {
         setAssignments(fetchedAssignments);
         setSubmissions(fetchedSubmissions);
         
-        const classSet = new Set(fetchedAssignments.map((a: any) => a.className));
+        const subjectSet = new Set(fetchedAssignments.map((a: any) => a.subjectName));
         
         const submittedAssignmentIds = new Set(fetchedSubmissions.map((s: any) => s.assignmentId));
         const pendingCount = fetchedAssignments.filter((a: any) => !submittedAssignmentIds.has(a.id)).length;
@@ -33,7 +33,7 @@ export default function StudentDashboard() {
         setStats({
           pending: pendingCount,
           completed: fetchedSubmissions.length,
-          classes: classSet.size
+          subjects: subjectSet.size
         });
       } catch (error) {
         console.error('Failed to fetch stats', error);
@@ -93,8 +93,8 @@ export default function StudentDashboard() {
             <BookOpen size={24} />
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-500">Active Classes</p>
-            <p className="text-2xl font-bold text-slate-800">{stats.classes}</p>
+            <p className="text-sm font-medium text-slate-500">Active Courses</p>
+            <p className="text-2xl font-bold text-slate-800">{stats.subjects}</p>
           </div>
         </div>
       </div>

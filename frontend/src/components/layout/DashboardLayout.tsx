@@ -93,7 +93,7 @@ export default function DashboardLayout({ children, allowedRole }: DashboardLayo
       case 'Student':
         return [
           { name: 'Dashboard', href: '/student/dashboard', icon: LayoutDashboard },
-          { name: 'My Classes', href: '/student/classes', icon: Library },
+          { name: 'My Courses', href: '/student/courses', icon: Library },
           { name: 'My Assignments', href: '/student/assignments', icon: FileText },
         ];
       default:
