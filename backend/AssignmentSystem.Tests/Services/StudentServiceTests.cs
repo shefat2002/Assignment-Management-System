@@ -122,7 +122,7 @@ public class StudentServiceTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
-            .WithMessage("You are not enrolled in the class for this assignment.");
+            .WithMessage("You are not enrolled in the class/section for this assignment.");
     }
 
     [Fact]

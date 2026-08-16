@@ -16,16 +16,16 @@ public static class SeedData
         await context.Database.MigrateAsync();
 
         // Load passwords from environment variables for security, fallback to defaults for local dev
-        var adminPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD") ?? "Admin123!";
-        var teacherPassword = Environment.GetEnvironmentVariable("SEED_TEACHER_PASSWORD") ?? "Teacher123!";
-        var studentPassword = Environment.GetEnvironmentVariable("SEED_STUDENT_PASSWORD") ?? "Student123!";
+        var adminPassword = Environment.GetEnvironmentVariable("SEED_ADMIN_PASSWORD");
+        var teacherPassword = Environment.GetEnvironmentVariable("SEED_TEACHER_PASSWORD") ;
+        var studentPassword = Environment.GetEnvironmentVariable("SEED_STUDENT_PASSWORD") ;
 
         // === USERS ===
         var users = new List<User>();
 
         var adminUser = new User
         {
-            FirstName = "Syed",
+            FirstName = "System",
             LastName = "Admin",
             Email = "admin@school.edu.bd",
             PasswordHash = BCrypt.Net.BCrypt.HashPassword(adminPassword),
@@ -173,6 +173,67 @@ public static class SeedData
             tIndex++;
         }
         await context.TeacherAssignments.AddRangeAsync(teacherAssignments);
+        await context.SaveChangesAsync();
+
+        // === ASSIGNMENTS ===
+        var assignments = new List<Assignment>();
+        var random = new Random(123); // fixed seed for reproducibility
+
+        for (int i = 0; i < 20; i++)
+        {
+            var tAssign = teacherAssignments[random.Next(teacherAssignments.Count)];
+            var subject = subjects.FirstOrDefault(s => s.Id == tAssign.SubjectId);
+            
+            assignments.Add(new Assignment
+            {
+                Title = $"Assignment {i + 1} - {subject?.Name ?? "General"}",
+                Description = $"Please complete the assignment for {subject?.Name ?? "the subject"}. Ensure to follow all instructions.",
+                Deadline = DateTime.UtcNow.AddDays(random.Next(-5, 15)), // Some past, some future
+                MaxMarks = 100,
+                Status = AssignmentStatus.Published,
+                AllowResubmission = random.Next(2) == 0,
+                TeacherId = tAssign.TeacherId,
+                ClassId = tAssign.ClassId,
+                SubjectId = tAssign.SubjectId,
+                Section = tAssign.Section
+            });
+        }
+        await context.Assignments.AddRangeAsync(assignments);
+        await context.SaveChangesAsync();
+
+        // === SUBMISSIONS ===
+        var submissions = new List<Submission>();
+        foreach (var assignment in assignments)
+        {
+            // Find students in the same class and section
+            var enrolledStudents = enrollments
+                .Where(e => e.ClassId == assignment.ClassId && e.Section == assignment.Section)
+                .Select(e => e.StudentId)
+                .ToList();
+
+            // Submit for a subset of students (e.g., up to 3)
+            int numSubmissions = random.Next(1, Math.Min(4, enrolledStudents.Count + 1));
+            for (int j = 0; j < numSubmissions; j++)
+            {
+                var studentId = enrolledStudents[j];
+                bool isPastDeadline = assignment.Deadline < DateTime.UtcNow;
+                bool isGraded = isPastDeadline && random.Next(2) == 0;
+                
+                var submission = new Submission
+                {
+                    AssignmentId = assignment.Id,
+                    StudentId = studentId,
+                    Content = $"This is the submission content for assignment {assignment.Id} by student {studentId}.",
+                    SubmittedAt = assignment.Deadline.AddDays(-random.Next(1, 4)),
+                    Status = isGraded ? SubmissionStatus.Graded : SubmissionStatus.Submitted,
+                    MarksAwarded = isGraded ? (decimal?)random.Next(60, 101) : null,
+                    Feedback = isGraded ? "Good effort and well explained." : null
+                };
+                submissions.Add(submission);
+            }
+        }
+        
+        await context.Submissions.AddRangeAsync(submissions);
         await context.SaveChangesAsync();
 
         // === APP SETTINGS ===

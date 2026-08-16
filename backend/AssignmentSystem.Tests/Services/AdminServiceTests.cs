@@ -152,7 +152,7 @@ public class AdminServiceTests
 
         // Assert
         await act.Should().ThrowAsync<InvalidOperationException>()
-            .WithMessage("Teacher is already assigned to this class and subject combination.");
+            .WithMessage("Teacher is already assigned to this class, subject, and section combination.");
     }
     
     [Fact]

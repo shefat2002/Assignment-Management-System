@@ -87,7 +87,7 @@ public class TeacherServiceTests
 
         // Assert
         await act.Should().ThrowAsync<UnauthorizedAccessException>()
-            .WithMessage("You are not authorized to create assignments for this class and subject.");
+            .WithMessage("You are not authorized to create assignments for this class, subject, and section.");
         
         _mockAssignmentRepo.Verify(repo => repo.AddAsync(It.IsAny<Assignment>()), Times.Never);
     }
